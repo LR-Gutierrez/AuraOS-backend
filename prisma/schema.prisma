@@ -19,3 +19,15 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
+
+model VehicleEntry {
+  id             String   @id @default(uuid())
+  plate          String
+  vehicleType    String
+  platePhotoUrl  String?
+  frontPhotoUrl  String?
+  rearPhotoUrl   String?
+  leftPhotoUrl   String?
+  rightPhotoUrl  String?
+  createdAt      DateTime @default(now())
+}
