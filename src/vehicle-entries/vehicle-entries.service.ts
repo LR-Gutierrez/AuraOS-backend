@@ -5,6 +5,7 @@ export interface CreateVehicleEntryData {
   plate: string;
   vehicleType: string;
   branchId: string;
+  isVip?: boolean;
   platePhotoUrl?: string;
   frontPhotoUrl?: string;
   rearPhotoUrl?: string;
@@ -38,7 +39,6 @@ export class VehicleEntriesService {
       };
     } catch (error) {
       console.error('Error al registrar el ingreso del vehículo:', error);
-      // Retornamos un objeto de error estructurado o lanzamos una excepción de NestJS
       throw new Error('No se pudo registrar el vehículo');
     }
   }

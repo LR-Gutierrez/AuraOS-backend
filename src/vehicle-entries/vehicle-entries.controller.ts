@@ -3,6 +3,7 @@ import {
   Post,
   Body,
   UseInterceptors,
+  UseFilters,
   UploadedFiles,
   HttpCode,
   HttpStatus,
@@ -10,10 +11,18 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { VehicleEntriesService } from './vehicle-entries.service';
+import { MulterErrorFilter } from './multer-error.filter';
+
+const uploadDir = join(process.cwd(), 'uploads', 'vehicle-entries');
+if (!existsSync(uploadDir)) {
+  mkdirSync(uploadDir, { recursive: true });
+}
 
 @Controller('api/v1')
+@UseFilters(MulterErrorFilter)
 export class VehicleEntriesController {
   constructor(private readonly vehicleEntriesService: VehicleEntriesService) {}
 
@@ -30,7 +39,7 @@ export class VehicleEntriesController {
       ],
       {
         storage: diskStorage({
-          destination: './uploads/vehicle-entries',
+          destination: uploadDir,
           filename: (req, file, cb) => {
             const randomName = Array(32)
               .fill(null)
@@ -39,6 +48,7 @@ export class VehicleEntriesController {
             return cb(null, `${randomName}${extname(file.originalname)}`);
           },
         }),
+        limits: { fileSize: 10 * 1024 * 1024 },
       },
     ),
   )
@@ -46,6 +56,7 @@ export class VehicleEntriesController {
     @Body('plate') plate: string,
     @Body('vehicleType') vehicleType: string,
     @Body('branchId') branchId: string,
+    @Body('isVip') isVip: string | undefined,
     @UploadedFiles()
     files: {
       platePhoto?: Express.Multer.File[];
@@ -56,20 +67,25 @@ export class VehicleEntriesController {
     },
   ) {
     if (!plate) {
-      throw new BadRequestException('El número de placa (plate) es obligatorio.');
+      throw new BadRequestException(
+        'El número de placa (plate) es obligatorio.',
+      );
     }
     if (!vehicleType) {
-      throw new BadRequestException('La categoría del vehículo (vehicleType) es obligatoria.');
+      throw new BadRequestException(
+        'La categoría del vehículo (vehicleType) es obligatoria.',
+      );
     }
     if (!branchId) {
       throw new BadRequestException('La sucursal (branchId) es obligatoria.');
     }
 
-    // Convert to relative paths that could be served
     const platePhotoUrl = files.platePhoto?.[0]?.path;
-    
+
     if (!platePhotoUrl) {
-      throw new BadRequestException('La foto de la placa (platePhoto) es obligatoria.');
+      throw new BadRequestException(
+        'La foto de la placa (platePhoto) es obligatoria.',
+      );
     }
 
     const frontPhotoUrl = files.front?.[0]?.path;
@@ -77,10 +93,13 @@ export class VehicleEntriesController {
     const leftPhotoUrl = files.left?.[0]?.path;
     const rightPhotoUrl = files.right?.[0]?.path;
 
+    const vip = isVip === 'true' || isVip === '1';
+
     return this.vehicleEntriesService.createEntry({
       plate,
       vehicleType,
       branchId,
+      isVip: vip,
       platePhotoUrl,
       frontPhotoUrl,
       rearPhotoUrl,

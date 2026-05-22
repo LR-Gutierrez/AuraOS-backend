@@ -14,7 +14,10 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { id: userId } });
   }
 
-  async updateBiometricKey(userId: string, publicKey: string): Promise<boolean> {
+  async updateBiometricKey(
+    userId: string,
+    publicKey: string,
+  ): Promise<boolean> {
     try {
       await this.prisma.user.update({
         where: { id: userId },

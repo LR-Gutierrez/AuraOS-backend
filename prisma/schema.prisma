@@ -24,6 +24,7 @@ model VehicleEntry {
   id            String   @id @default(uuid())
   plate         String
   vehicleType   String
+  isVip         Boolean  @default(false)
   branchId      String
   branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
   platePhotoUrl String?
@@ -52,7 +53,23 @@ model Branch {
   currency String @default("USD")
 
   vehicleEntries VehicleEntry[]
+  memberships    Membership[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Membership {
+  id         String   @id @default(uuid())
+  memberName String
+  tier       String   @default("Regular")
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  branchId   String
+  branch     Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([branchId])
 }

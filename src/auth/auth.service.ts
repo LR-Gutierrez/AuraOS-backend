@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   async login(email: string, pass: string) {
@@ -32,11 +32,11 @@ export class AuthService {
       });
     }
 
-    const payload = { 
-      userId: user.id, 
-      name: user.name, 
+    const payload = {
+      userId: user.id,
+      name: user.name,
       role: user.role,
-      email: user.email 
+      email: user.email,
     };
 
     return {
@@ -56,9 +56,13 @@ export class AuthService {
     };
   }
 
-  async loginWithBiometrics(userId: string, challenge: string, signature: string) {
+  async loginWithBiometrics(
+    userId: string,
+    challenge: string,
+    signature: string,
+  ) {
     const user = await this.usersService.findById(userId);
-    
+
     if (!user || !user.biometricPublicKey) {
       throw new UnauthorizedException({
         success: false,
@@ -76,10 +80,10 @@ export class AuthService {
       // 2. Inicializar el verificador nativo
       const verifier = crypto.createVerify('SHA256');
       verifier.update(challenge);
-      
+
       // 3. SOLUCIÓN SIGNATURE: Cambiamos 'hex' por 'base64' ya que la firma trae '/' y '=='
-      const isValid = verifier.verify(pemKey, signature, 'base64'); 
-     
+      const isValid = verifier.verify(pemKey, signature, 'base64');
+
       if (!isValid) {
         throw new UnauthorizedException({
           success: false,
@@ -87,10 +91,15 @@ export class AuthService {
           message: 'Verificación biométrica fallida o firma inválida.',
         });
       }
-    
+
       // 4. Autenticación exitosa - Emitir credenciales AURA OS
-      const payload = { userId: user.id, name: user.name, role: user.role, email: user.email };
-    
+      const payload = {
+        userId: user.id,
+        name: user.name,
+        role: user.role,
+        email: user.email,
+      };
+
       return {
         success: true,
         message: 'Autenticación biométrica exitosa',
@@ -103,8 +112,8 @@ export class AuthService {
             name: user.name,
             email: user.email,
             role: user.role,
-          }
-        }
+          },
+        },
       };
     } catch (error) {
       console.error('¡Error crítico en la verificación criptográfica!', error);
@@ -117,7 +126,10 @@ export class AuthService {
   }
 
   async registerBiometrics(userId: string, publicKey: string) {
-    const success = await this.usersService.updateBiometricKey(userId, publicKey);
+    const success = await this.usersService.updateBiometricKey(
+      userId,
+      publicKey,
+    );
     if (!success) {
       throw new UnauthorizedException({
         success: false,
@@ -126,7 +138,8 @@ export class AuthService {
     }
     return {
       success: true,
-      message: 'Dispositivo móvil enrolado exitosamente para acceso biométrico.',
+      message:
+        'Dispositivo móvil enrolado exitosamente para acceso biométrico.',
     };
   }
 
@@ -144,7 +157,7 @@ export class AuthService {
       email: data.email,
       password: hashedPassword,
       name: data.name,
-      role: data.role || 'operator'
+      role: data.role || 'operator',
     });
 
     return {
@@ -155,7 +168,7 @@ export class AuthService {
         email: newUser.email,
         name: newUser.name,
         role: newUser.role,
-      }
+      },
     };
   }
 }

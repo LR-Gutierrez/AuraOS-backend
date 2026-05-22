@@ -55,18 +55,18 @@ export class BranchesService {
     const branch = await this.prisma.branch.findUnique({
       where: { id },
     });
-    
+
     if (!branch) {
       throw new NotFoundException(`Branch with ID ${id} not found`);
     }
-    
+
     return branch;
   }
 
   async updateBranch(id: string, data: UpdateBranchDto) {
     // Check if exists
     await this.getBranchById(id);
-    
+
     return this.prisma.branch.update({
       where: { id },
       data,
@@ -76,7 +76,7 @@ export class BranchesService {
   async deleteBranch(id: string) {
     // Check if exists
     await this.getBranchById(id);
-    
+
     return this.prisma.branch.delete({
       where: { id },
     });

@@ -25,7 +25,13 @@ export class AuthController {
 
   @Post('biometric-login')
   @HttpCode(HttpStatus.OK)
-  async biometricLogin(@Body() body: { userId: string; challenge: string; signature: string }) {
-    return this.authService.loginWithBiometrics(body.userId, body.challenge, body.signature);
+  async biometricLogin(
+    @Body() body: { userId: string; challenge: string; signature: string },
+  ) {
+    return this.authService.loginWithBiometrics(
+      body.userId,
+      body.challenge,
+      body.signature,
+    );
   }
 }
