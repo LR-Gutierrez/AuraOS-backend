@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface CreateVehicleEntryData {
   plate: string;
   vehicleType: string;
+  branchId: string;
   platePhotoUrl?: string;
   frontPhotoUrl?: string;
   rearPhotoUrl?: string;
@@ -16,9 +17,18 @@ export class VehicleEntriesService {
   constructor(private prisma: PrismaService) {}
 
   async createEntry(data: CreateVehicleEntryData) {
+    const branch = await this.prisma.branch.findUnique({
+      where: { id: data.branchId },
+    });
+
+    if (!branch) {
+      throw new NotFoundException(`Branch with ID ${data.branchId} not found`);
+    }
+
     try {
       const entry = await this.prisma.vehicleEntry.create({
         data,
+        include: { branch: true },
       });
 
       return {

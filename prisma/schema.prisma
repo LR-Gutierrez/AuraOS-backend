@@ -21,13 +21,38 @@ model User {
 }
 
 model VehicleEntry {
-  id             String   @id @default(uuid())
-  plate          String
-  vehicleType    String
-  platePhotoUrl  String?
-  frontPhotoUrl  String?
-  rearPhotoUrl   String?
-  leftPhotoUrl   String?
-  rightPhotoUrl  String?
-  createdAt      DateTime @default(now())
+  id            String   @id @default(uuid())
+  plate         String
+  vehicleType   String
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  platePhotoUrl String?
+  frontPhotoUrl String?
+  rearPhotoUrl  String?
+  leftPhotoUrl  String?
+  rightPhotoUrl String?
+  createdAt     DateTime @default(now())
+
+  @@index([branchId])
+}
+
+model Branch {
+  id      String  @id @default(uuid())
+  name    String
+  address String?
+
+  motorcycleCapacity   Int @default(0)
+  lightVehicleCapacity Int @default(0)
+  heavyVehicleCapacity Int @default(0)
+
+  motorcycleRate   Float @default(0.0)
+  lightVehicleRate Float @default(0.0)
+  heavyVehicleRate Float @default(0.0)
+
+  currency String @default("USD")
+
+  vehicleEntries VehicleEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

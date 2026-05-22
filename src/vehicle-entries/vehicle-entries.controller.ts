@@ -45,6 +45,7 @@ export class VehicleEntriesController {
   async create(
     @Body('plate') plate: string,
     @Body('vehicleType') vehicleType: string,
+    @Body('branchId') branchId: string,
     @UploadedFiles()
     files: {
       platePhoto?: Express.Multer.File[];
@@ -59,6 +60,9 @@ export class VehicleEntriesController {
     }
     if (!vehicleType) {
       throw new BadRequestException('La categoría del vehículo (vehicleType) es obligatoria.');
+    }
+    if (!branchId) {
+      throw new BadRequestException('La sucursal (branchId) es obligatoria.');
     }
 
     // Convert to relative paths that could be served
@@ -76,6 +80,7 @@ export class VehicleEntriesController {
     return this.vehicleEntriesService.createEntry({
       plate,
       vehicleType,
+      branchId,
       platePhotoUrl,
       frontPhotoUrl,
       rearPhotoUrl,

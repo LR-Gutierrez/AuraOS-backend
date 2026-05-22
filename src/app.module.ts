@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { VehicleEntriesModule } from './vehicle-entries/vehicle-entries.module';
+import { BranchesModule } from './branches/branches.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { VehicleEntriesModule } from './vehicle-entries/vehicle-entries.module';
     UsersModule,
     AuthModule,
     VehicleEntriesModule,
+    BranchesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
