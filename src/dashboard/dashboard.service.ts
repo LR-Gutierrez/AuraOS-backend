@@ -46,13 +46,17 @@ export class DashboardService {
     yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
     const [
-      todayEntries,
+      currentEntries,
+      todayRevenueEntries,
       yesterdayEntries,
       totalMemberships,
       activeMemberships,
       expiringMemberships,
       vipEntries,
     ] = await Promise.all([
+      this.prisma.vehicleEntry.findMany({
+        where: { branchId, exitedAt: null },
+      }),
       this.prisma.vehicleEntry.findMany({
         where: { branchId, createdAt: { gte: todayStart } },
       }),
@@ -79,6 +83,7 @@ export class DashboardService {
         where: {
           branchId,
           isVip: true,
+          exitedAt: null,
           createdAt: { gte: new Date(now.getTime() - 60 * 60 * 1000) },
         },
         orderBy: { createdAt: 'desc' },
@@ -91,7 +96,7 @@ export class DashboardService {
       heavy: 3,
     };
 
-    const countByType = (entries: typeof todayEntries) => {
+    const countByType = (entries: typeof currentEntries) => {
       let equivalent = 0;
       for (const e of entries) {
         equivalent += typeMultiplier[e.vehicleType] ?? 1;
@@ -99,7 +104,7 @@ export class DashboardService {
       return equivalent;
     };
 
-    const occupiedEquivalent = countByType(todayEntries);
+    const occupiedEquivalent = countByType(currentEntries);
     const yesterdayOccupiedEquivalent = countByType(yesterdayEntries);
 
     const totalEquivalentCapacity =
@@ -127,7 +132,7 @@ export class DashboardService {
           : 0;
 
     const vehicleCounts = { motorcycle: 0, light: 0, heavy: 0 };
-    for (const e of todayEntries) {
+    for (const e of todayRevenueEntries) {
       if (e.vehicleType === 'motorcycle') vehicleCounts.motorcycle++;
       else if (e.vehicleType === 'light') vehicleCounts.light++;
       else if (e.vehicleType === 'heavy') vehicleCounts.heavy++;

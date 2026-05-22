@@ -26,14 +26,18 @@ export class MulterErrorFilter implements ExceptionFilter {
       message?.toLowerCase().includes('file too large') ||
       message?.toLowerCase().includes('unexpected field');
 
-    response.status(isAbort ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      error: isAbort ? 'REQUEST_ABORTED' : 'UPLOAD_ERROR',
-      message: isAbort
-        ? 'La conexión se interrumpió durante la subida del archivo. Verifica el tamaño y la conexión de red.'
-        : isMulter
-          ? 'Error al procesar los archivos subidos. Verifica los campos y tamaños.'
-          : message,
-    });
+    response
+      .status(
+        isAbort ? HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR,
+      )
+      .json({
+        success: false,
+        error: isAbort ? 'REQUEST_ABORTED' : 'UPLOAD_ERROR',
+        message: isAbort
+          ? 'La conexión se interrumpió durante la subida del archivo. Verifica el tamaño y la conexión de red.'
+          : isMulter
+            ? 'Error al procesar los archivos subidos. Verifica los campos y tamaños.'
+            : message,
+      });
   }
 }

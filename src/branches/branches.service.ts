@@ -1,29 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-
-export class CreateBranchDto {
-  name: string;
-  address?: string;
-  motorcycleCapacity?: number;
-  lightVehicleCapacity?: number;
-  heavyVehicleCapacity?: number;
-  motorcycleRate?: number;
-  lightVehicleRate?: number;
-  heavyVehicleRate?: number;
-  currency?: string;
-}
-
-export class UpdateBranchDto {
-  name?: string;
-  address?: string;
-  motorcycleCapacity?: number;
-  lightVehicleCapacity?: number;
-  heavyVehicleCapacity?: number;
-  motorcycleRate?: number;
-  lightVehicleRate?: number;
-  heavyVehicleRate?: number;
-  currency?: string;
-}
+import { CreateBranchDto } from './dto/create-branch.dto';
+import { UpdateBranchDto } from './dto/update-branch.dto';
 
 @Injectable()
 export class BranchesService {

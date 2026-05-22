@@ -9,11 +9,9 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  BranchesService,
-  CreateBranchDto,
-  UpdateBranchDto,
-} from './branches.service';
+import { BranchesService } from './branches.service';
+import { CreateBranchDto } from './dto/create-branch.dto';
+import { UpdateBranchDto } from './dto/update-branch.dto';
 
 @Controller('api/v1/branches')
 export class BranchesController {

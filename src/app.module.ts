@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { VehicleEntriesModule } from './vehicle-entries/vehicle-entries.module';
 import { BranchesModule } from './branches/branches.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { MembershipsModule } from './memberships/memberships.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     VehicleEntriesModule,
     BranchesModule,
     DashboardModule,
+    MembershipsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

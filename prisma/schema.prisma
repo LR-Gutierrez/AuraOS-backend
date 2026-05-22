@@ -21,18 +21,19 @@ model User {
 }
 
 model VehicleEntry {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   plate         String
   vehicleType   String
-  isVip         Boolean  @default(false)
+  isVip         Boolean   @default(false)
   branchId      String
-  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  branch        Branch    @relation(fields: [branchId], references: [id], onDelete: Restrict)
   platePhotoUrl String?
   frontPhotoUrl String?
   rearPhotoUrl  String?
   leftPhotoUrl  String?
   rightPhotoUrl String?
-  createdAt     DateTime @default(now())
+  exitedAt      DateTime?
+  createdAt     DateTime  @default(now())
 
   @@index([branchId])
 }

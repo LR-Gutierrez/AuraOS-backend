@@ -1,6 +1,9 @@
 import {
   Controller,
+  Get,
   Post,
+  Patch,
+  Param,
   Body,
   UseInterceptors,
   UseFilters,
@@ -15,6 +18,7 @@ import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { VehicleEntriesService } from './vehicle-entries.service';
 import { MulterErrorFilter } from './multer-error.filter';
+import { ExitVehicleDto } from './dto/exit-vehicle.dto';
 
 const uploadDir = join(process.cwd(), 'uploads', 'vehicle-entries');
 if (!existsSync(uploadDir)) {
@@ -106,5 +110,21 @@ export class VehicleEntriesController {
       leftPhotoUrl,
       rightPhotoUrl,
     });
+  }
+
+  @Patch('vehicle-entries/:id/exit')
+  @HttpCode(HttpStatus.OK)
+  async exit(@Param('id') id: string, @Body() dto: ExitVehicleDto) {
+    return this.vehicleEntriesService.exitVehicle(id, dto.exitedAt);
+  }
+
+  @Get('vehicle-entries')
+  findAll() {
+    return this.vehicleEntriesService.findAll();
+  }
+
+  @Get('vehicle-entries/:id')
+  findOne(@Param('id') id: string) {
+    return this.vehicleEntriesService.findOne(id);
   }
 }
