@@ -5,6 +5,7 @@ import {
   Patch,
   Param,
   Body,
+  Query,
   UseInterceptors,
   UseFilters,
   UploadedFiles,
@@ -119,8 +120,22 @@ export class VehicleEntriesController {
   }
 
   @Get('vehicle-entries')
-  findAll() {
-    return this.vehicleEntriesService.findAll();
+  findAll(
+    @Query('branchId') branchId?: string,
+    @Query('exited') exited?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.vehicleEntriesService.findAll({
+      branchId,
+      exited: exited === 'true' ? true : exited === 'false' ? false : undefined,
+      from,
+      to,
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
   }
 
   @Get('vehicle-entries/:id')

@@ -13,6 +13,15 @@ export interface CreateVehicleEntryData {
   rightPhotoUrl?: string;
 }
 
+export interface VehicleEntryFilters {
+  branchId?: string;
+  exited?: boolean;
+  from?: string;
+  to?: string;
+  page?: number;
+  limit?: number;
+}
+
 @Injectable()
 export class VehicleEntriesService {
   constructor(private prisma: PrismaService) {}
@@ -68,11 +77,49 @@ export class VehicleEntriesService {
     };
   }
 
-  async findAll() {
-    return this.prisma.vehicleEntry.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: { branch: true },
-    });
+  async findAll(filters?: VehicleEntryFilters) {
+    const page = filters?.page ?? 1;
+    const limit = filters?.limit ?? 50;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (filters?.branchId) {
+      where.branchId = filters.branchId;
+    }
+
+    if (filters?.exited === true) {
+      where.exitedAt = { not: null };
+    } else if (filters?.exited === false) {
+      where.exitedAt = null;
+    }
+
+    if (filters?.from || filters?.to) {
+      where.createdAt = {};
+      if (filters.from) where.createdAt.gte = new Date(filters.from);
+      if (filters.to) where.createdAt.lte = new Date(filters.to);
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.vehicleEntry.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: { branch: true },
+      }),
+      this.prisma.vehicleEntry.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {
