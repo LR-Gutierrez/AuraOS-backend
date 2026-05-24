@@ -177,7 +177,11 @@ export class VehicleEntriesService {
     if (filters?.from || filters?.to) {
       where.createdAt = {};
       if (filters.from) where.createdAt.gte = new Date(filters.from);
-      if (filters.to) where.createdAt.lte = new Date(filters.to);
+      if (filters.to) {
+        const toDate = new Date(filters.to);
+        toDate.setHours(23, 59, 59, 999);
+        where.createdAt.lte = toDate;
+      }
     }
 
     const [data, total] = await Promise.all([
