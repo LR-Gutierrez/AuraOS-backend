@@ -142,4 +142,9 @@ export class VehicleEntriesController {
   findOne(@Param('id') id: string) {
     return this.vehicleEntriesService.findOne(id);
   }
+
+  @Get('branches/:branchId/entries/summary')
+  getSummary(@Param('branchId') branchId: string) {
+    return this.vehicleEntriesService.getSummary(branchId);
+  }
 }
