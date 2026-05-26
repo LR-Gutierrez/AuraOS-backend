@@ -9,9 +9,16 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const branch = await prisma.branch.findFirst();
+  let branch = await prisma.branch.findFirst();
   if (!branch) {
     throw new Error('No hay ninguna sucursal en la BD. Ejecuta las migrations primero.');
+  }
+
+  if (!branch.favorite) {
+    branch = await prisma.branch.update({
+      where: { id: branch.id },
+      data: { favorite: true },
+    });
   }
 
   const salt = await bcrypt.genSalt(10);

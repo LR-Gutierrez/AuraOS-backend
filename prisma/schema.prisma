@@ -53,6 +53,7 @@ model Branch {
   heavyVehicleRate Float @default(0.0)
 
   currency String @default("USD")
+  favorite Boolean @default(false)
 
   vehicleEntries VehicleEntry[]
   memberships    Membership[]
