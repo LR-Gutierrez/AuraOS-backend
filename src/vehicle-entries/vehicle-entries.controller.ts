@@ -6,6 +6,7 @@ import {
   Param,
   Body,
   Query,
+  Req,
   UseInterceptors,
   UseFilters,
   UploadedFiles,
@@ -14,16 +15,18 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import type { Request } from 'express';
 import { diskStorage } from 'multer';
+import { randomUUID } from 'crypto';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { VehicleEntriesService } from './vehicle-entries.service';
 import { MulterErrorFilter } from './multer-error.filter';
 import { ExitVehicleDto } from './dto/exit-vehicle.dto';
 
-const uploadDir = join(process.cwd(), 'uploads', 'vehicle-entries');
-if (!existsSync(uploadDir)) {
-  mkdirSync(uploadDir, { recursive: true });
+const uploadBaseDir = join(process.cwd(), 'uploads', 'vehicle-entries');
+if (!existsSync(uploadBaseDir)) {
+  mkdirSync(uploadBaseDir, { recursive: true });
 }
 
 @Controller('api/v1')
@@ -44,13 +47,15 @@ export class VehicleEntriesController {
       ],
       {
         storage: diskStorage({
-          destination: uploadDir,
+          destination: (req, file, cb) => {
+            const entryId = randomUUID();
+            req['uploadEntryId'] = entryId;
+            const dir = join(uploadBaseDir, entryId);
+            mkdirSync(dir, { recursive: true });
+            cb(null, dir);
+          },
           filename: (req, file, cb) => {
-            const randomName = Array(32)
-              .fill(null)
-              .map(() => Math.round(Math.random() * 16).toString(16))
-              .join('');
-            return cb(null, `${randomName}${extname(file.originalname)}`);
+            cb(null, `${file.fieldname}${extname(file.originalname)}`);
           },
         }),
         limits: { fileSize: 10 * 1024 * 1024 },
@@ -58,6 +63,7 @@ export class VehicleEntriesController {
     ),
   )
   async create(
+    @Req() req: Request,
     @Body('plate') plate: string,
     @Body('vehicleType') vehicleType: string,
     @Body('branchId') branchId: string,
@@ -85,6 +91,8 @@ export class VehicleEntriesController {
       throw new BadRequestException('La sucursal (branchId) es obligatoria.');
     }
 
+    const entryId = req['uploadEntryId'];
+
     const platePhotoUrl = files.platePhoto?.[0]?.path;
 
     if (!platePhotoUrl) {
@@ -101,6 +109,7 @@ export class VehicleEntriesController {
     const vip = isVip === 'true' || isVip === '1';
 
     return this.vehicleEntriesService.createEntry({
+      id: entryId,
       plate,
       vehicleType,
       branchId,
@@ -122,6 +131,7 @@ export class VehicleEntriesController {
   @Get('vehicle-entries')
   findAll(
     @Query('branchId') branchId?: string,
+    @Query('plate') plate?: string,
     @Query('exited') exited?: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
@@ -130,6 +140,7 @@ export class VehicleEntriesController {
   ) {
     return this.vehicleEntriesService.findAll({
       branchId,
+      plate,
       exited: exited === 'true' ? true : exited === 'false' ? false : undefined,
       from,
       to,

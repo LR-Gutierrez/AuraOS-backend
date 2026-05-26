@@ -10,6 +10,7 @@ const RATE_FIELD: Record<string, string> = {
 };
 
 export interface CreateVehicleEntryData {
+  id?: string;
   plate: string;
   vehicleType: string;
   branchId: string;
@@ -23,6 +24,7 @@ export interface CreateVehicleEntryData {
 
 export interface VehicleEntryFilters {
   branchId?: string;
+  plate?: string;
   exited?: boolean;
   from?: string;
   to?: string;
@@ -114,8 +116,16 @@ export class VehicleEntriesService {
     try {
       const entry = await this.prisma.vehicleEntry.create({
         data: {
-          ...data,
+          ...(data.id && { id: data.id }),
+          plate: data.plate,
           vehicleType,
+          branchId: data.branchId,
+          isVip: data.isVip,
+          platePhotoUrl: data.platePhotoUrl,
+          frontPhotoUrl: data.frontPhotoUrl,
+          rearPhotoUrl: data.rearPhotoUrl,
+          leftPhotoUrl: data.leftPhotoUrl,
+          rightPhotoUrl: data.rightPhotoUrl,
         },
         include: { branch: true },
       });
@@ -166,6 +176,10 @@ export class VehicleEntriesService {
 
     if (filters?.branchId) {
       where.branchId = filters.branchId;
+    }
+
+    if (filters?.plate) {
+      where.plate = { contains: filters.plate, mode: 'insensitive' };
     }
 
     if (filters?.exited === true) {

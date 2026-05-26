@@ -36,6 +36,7 @@ model VehicleEntry {
   createdAt     DateTime  @default(now())
 
   @@index([branchId])
+  @@index([plate])
 }
 
 model Branch {

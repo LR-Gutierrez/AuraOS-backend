@@ -143,7 +143,7 @@ Obtener una sucursal por ID.
 ---
 
 ### POST `/api/v1/branches`
-Crear una nueva sucursal. Los campos ahora se validan automáticamente (`@IsString`, `@Min(0)`, etc.).
+Crear una nueva sucursal.
 
 **Body (JSON):**
 ```json
@@ -159,7 +159,7 @@ Crear una nueva sucursal. Los campos ahora se validan automáticamente (`@IsStri
   "currency": "USD"
 }
 ```
-Todos los campos numéricos tienen default 0, `currency` default "USD". `currency` solo acepta `USD`, `MXN` o `EUR`.
+Todos los campos numéricos tienen default 0, `currency` default `"USD"`. `currency` solo acepta `USD`, `MXN` o `EUR`.
 
 ---
 
@@ -203,7 +203,7 @@ Registrar la entrada de un vehículo al estacionamiento.
     "vehicleType": "light",
     "isVip": false,
     "branchId": "uuid-de-sucursal",
-    "platePhotoUrl": "uploads/vehicle-entries/abc123.jpg",
+    "platePhotoUrl": "uploads/vehicle-entries/abc123.../platePhoto.jpg",
     "frontPhotoUrl": null,
     "rearPhotoUrl": null,
     "leftPhotoUrl": null,
@@ -216,9 +216,10 @@ Registrar la entrada de un vehículo al estacionamiento.
 ```
 
 **Notas:**
-- Las fotos se sirven estáticamente en: `http://192.168.2.112:3000/uploads/vehicle-entries/<archivo>`
-- `isVip` se usa para poblar `vipArrivals` en el dashboard.
-- Los `vehicleType` válidos son `motorcycle`, `light`, `heavy`.
+- Las fotos se guardan en `uploads/vehicle-entries/{entry-uuid}/{tipo}.jpg` y se sirven estáticamente en `http://192.168.2.112:3000/uploads/vehicle-entries/{entry-uuid}/{tipo}.jpg`
+- El nombre del archivo corresponde al campo (`platePhoto.jpg`, `front.jpg`, `rear.jpg`, `left.jpg`, `right.jpg`)
+- `isVip` se usa para poblar `vipArrivals` en el dashboard
+- Los `vehicleType` válidos son `motorcycle`, `light`, `heavy`
 
 ---
 
@@ -255,9 +256,10 @@ Listar ingresos/egresos con filtros y paginación.
 | Query param | Ejemplo | Descripción |
 |-------------|---------|-------------|
 | `branchId` | `?branchId=uuid` | Filtrar por sucursal |
+| `plate` | `?plate=ABC` | Filtrar por placa (búsqueda parcial, case-insensitive) |
 | `exited` | `?exited=true` | `true` → solo salidas, `false` → solo activos (sin salir) |
-| `from` | `?from=2026-05-22T00:00:00Z` | Fecha inicial del rango de ingreso |
-| `to` | `?to=2026-05-22T23:59:59Z` | Fecha final del rango de ingreso |
+| `from` | `?from=2026-05-22` | Fecha inicial del rango de ingreso |
+| `to` | `?to=2026-05-22` | Fecha final del rango de ingreso |
 | `page` | `?page=1` | Número de página |
 | `limit` | `?limit=20` | Resultados por página |
 
@@ -271,9 +273,15 @@ Listar ingresos/egresos con filtros y paginación.
       "vehicleType": "light",
       "isVip": false,
       "branchId": "uuid",
-      "platePhotoUrl": "uploads/...",
+      "platePhotoUrl": "uploads/vehicle-entries/{uuid}/platePhoto.jpg",
+      "frontPhotoUrl": null,
+      "rearPhotoUrl": null,
+      "leftPhotoUrl": null,
+      "rightPhotoUrl": null,
       "exitedAt": "2026-05-22T18:30:00.000Z",
       "createdAt": "2026-05-22T10:30:00.000Z",
+      "duration": "8h 0m",
+      "fee": 5.00,
       "branch": { "id": "uuid", "name": "Sucursal Centro", ... }
     }
   ],
@@ -281,19 +289,36 @@ Listar ingresos/egresos con filtros y paginación.
     "total": 150,
     "page": 1,
     "limit": 20,
-    "totalPages": 8
+    "totalPages": 8,
+    "todaySummary": {
+      "exitedCount": 12,
+      "totalRevenue": 85.50
+    }
   }
 }
 ```
-
-**Para el Historial de Salidas** usa: `?exited=true&branchId=<id>`
 
 ---
 
 ### GET `/api/v1/vehicle-entries/:id`
 Obtener detalle de un ingreso/salida específico.
 
-**Respuesta:** Objeto completo del vehicle entry (incluye `branch`).
+**Respuesta:** Objeto completo del vehicle entry (incluye `branch`, `duration` y `fee` si ya salió).
+
+---
+
+### GET `/api/v1/branches/:branchId/entries/summary`
+Resumen del día para una sucursal.
+
+**Respuesta:**
+```json
+{
+  "todayExits": 12,
+  "todayRevenue": 85.50,
+  "averageStay": "4h 30m",
+  "peakExitHour": 17
+}
+```
 
 ---
 
@@ -342,7 +367,7 @@ Authorization: Bearer <token>
 | `occupiedBays` | number | Espacios equivalentes ocupados **ahora** (exitedAt = null). |
 | `totalBays` | number | Capacidad total en equivalentes: `motorcycleCapacity + lightVehicleCapacity + (heavyVehicleCapacity × 3)` |
 | `trendPercent` | number | % de cambio vs ayer a la misma hora. |
-| `dailyRevenue` | number | Suma de (cantidad de cada tipo × su tarifa) para ingresos de **hoy**. |
+| `dailyRevenue` | number | Suma de tarifas para ingresos de **hoy**. |
 | `activeMemberships` | number | Membresías activas de esta sucursal. |
 | `totalMemberships` | number | Total de membresías (activas + inactivas). |
 | `criticalAlertsCount` | number | Membresías activas que vencen en las próximas 24 horas. |
@@ -402,7 +427,7 @@ Eliminar una membresía. Retorna 204 No Content.
 | **Ingresos** | Solo se considera el día actual (desde las 00:00 hs). No es acumulado histórico. |
 | **Alertas críticas** | Membresías con menos de 24 horas para vencer. |
 | **VIP arrivals** | Vehículos con `isVip: true` que ingresaron en la última hora y no han salido. |
-| **Fotos** | Máximo 10 MB por archivo. Se sirven estáticamente en `/uploads/vehicle-entries/`. |
+| **Fotos** | Máximo 10 MB por archivo. Se guardan en `uploads/vehicle-entries/{entry-uuid}/{tipo}.jpg` y se sirven estáticamente en `/uploads/vehicle-entries/{entry-uuid}/{tipo}.jpg`. |
 
 ---
 
