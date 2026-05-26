@@ -203,7 +203,7 @@ Registrar la entrada de un vehículo al estacionamiento.
     "vehicleType": "light",
     "isVip": false,
     "branchId": "uuid-de-sucursal",
-    "platePhotoUrl": "uploads/vehicle-entries/abc123.../platePhoto.jpg",
+    "platePhotoUrl": "uploads/vehicle-entries/{branchId}/{entryId}/platePhoto.jpg",
     "frontPhotoUrl": null,
     "rearPhotoUrl": null,
     "leftPhotoUrl": null,
@@ -216,7 +216,7 @@ Registrar la entrada de un vehículo al estacionamiento.
 ```
 
 **Notas:**
-- Las fotos se guardan en `uploads/vehicle-entries/{entry-uuid}/{tipo}.jpg` y se sirven estáticamente en `http://192.168.2.112:3000/uploads/vehicle-entries/{entry-uuid}/{tipo}.jpg`
+- Las fotos se guardan en `uploads/vehicle-entries/{branchId}/{entry-uuid}/{tipo}.jpg` y se sirven estáticamente en `http://192.168.2.112:3000/uploads/vehicle-entries/{branchId}/{entry-uuid}/{tipo}.jpg`
 - El nombre del archivo corresponde al campo (`platePhoto.jpg`, `front.jpg`, `rear.jpg`, `left.jpg`, `right.jpg`)
 - `isVip` se usa para poblar `vipArrivals` en el dashboard
 - Los `vehicleType` válidos son `motorcycle`, `light`, `heavy`
@@ -273,7 +273,7 @@ Listar ingresos/egresos con filtros y paginación.
       "vehicleType": "light",
       "isVip": false,
       "branchId": "uuid",
-      "platePhotoUrl": "uploads/vehicle-entries/{uuid}/platePhoto.jpg",
+      "platePhotoUrl": "uploads/vehicle-entries/{branchId}/{entryId}/platePhoto.jpg",
       "frontPhotoUrl": null,
       "rearPhotoUrl": null,
       "leftPhotoUrl": null,
@@ -427,7 +427,7 @@ Eliminar una membresía. Retorna 204 No Content.
 | **Ingresos** | Solo se considera el día actual (desde las 00:00 hs). No es acumulado histórico. |
 | **Alertas críticas** | Membresías con menos de 24 horas para vencer. |
 | **VIP arrivals** | Vehículos con `isVip: true` que ingresaron en la última hora y no han salido. |
-| **Fotos** | Máximo 10 MB por archivo. Se guardan en `uploads/vehicle-entries/{entry-uuid}/{tipo}.jpg` y se sirven estáticamente en `/uploads/vehicle-entries/{entry-uuid}/{tipo}.jpg`. |
+| **Fotos** | Máximo 10 MB por archivo. Se guardan en `uploads/vehicle-entries/{branchId}/{entry-uuid}/{tipo}.jpg` y se sirven estáticamente en `/uploads/vehicle-entries/{branchId}/{entry-uuid}/{tipo}.jpg`. |
 
 ---
 

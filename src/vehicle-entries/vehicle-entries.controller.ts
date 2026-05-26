@@ -48,9 +48,13 @@ export class VehicleEntriesController {
       {
         storage: diskStorage({
           destination: (req, file, cb) => {
-            const entryId = randomUUID();
+            const branchId = req.body?.branchId;
+            if (!branchId) {
+              return cb(new Error('branchId es obligatorio'), '');
+            }
+            const entryId = req['uploadEntryId'] ?? randomUUID();
             req['uploadEntryId'] = entryId;
-            const dir = join(uploadBaseDir, entryId);
+            const dir = join(uploadBaseDir, branchId, entryId);
             mkdirSync(dir, { recursive: true });
             cb(null, dir);
           },
