@@ -9,6 +9,7 @@ import { VehicleEntriesModule } from './vehicle-entries/vehicle-entries.module';
 import { BranchesModule } from './branches/branches.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { MembershipsModule } from './memberships/memberships.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MembershipsModule } from './memberships/memberships.module';
     BranchesModule,
     DashboardModule,
     MembershipsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

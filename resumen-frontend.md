@@ -28,6 +28,11 @@
 | GET | `/api/v1/vehicle-entries/:id` | ❌ | Detalle de un registro |
 | GET | `/api/v1/branches/:branchId/entries/summary` | ❌ | Resumen del día |
 
+### Analytics
+| Método | Ruta | Auth | Descripción |
+|--------|------|:----:|-------------|
+| GET | `/api/v1/analytics/summary` | ❌ | Resumen completo con tendencias y hora pico. Query: `?branchId=&date=&inboundThresholdMinutes=` |
+
 ### Dashboard (requiere JWT)
 | Método | Ruta | Auth |
 |--------|------|:----:|
@@ -110,6 +115,66 @@ GET /api/v1/branches/:branchId/entries/summary
   "peakExitHour": 17
 }
 ```
+
+---
+
+## Analytics Summary
+
+```
+GET /api/v1/analytics/summary?branchId=<uuid>&date=YYYY-MM-DD&inboundThresholdMinutes=30
+```
+
+| Query param | Tipo | Default | Descripción |
+|-------------|------|---------|-------------|
+| `branchId` | string | **requerido** | UUID de la sucursal |
+| `date` | string (YYYY-MM-DD) | Hoy (UTC) | Fecha del resumen |
+| `inboundThresholdMinutes` | number | 30 | Minutos para clasificar INBOUND vs OCCUPIED |
+
+**Respuesta:**
+```json
+{
+  "branchId": "uuid",
+  "date": "2026-05-27",
+  "totalCapacity": 70,
+  "inboundCount": 3,
+  "activeCount": 15,
+  "outboundCount": 22,
+  "totalRevenue": 44.00,
+  "avgDurationMinutes": 145,
+  "inboundTrendPercent": 50,
+  "activeTrendPercent": -7,
+  "outboundTrendPercent": 10,
+  "revenueTrendPercent": 12,
+  "peakHourRevenue": 8.00,
+  "peakHourLabel": "14:00 - 15:00",
+  "inboundThresholdMinutes": 30
+}
+```
+
+Reemplaza las **3 llamadas** que hacía el frontend (`exited=true`, `exited=false`, `exited=true&from=ayer&to=ayer`) y los **5 valores quemados** (capacidad, hora pico, tendencia de salidas, umbral INBOUND, activos de ayer).
+
+### Clasificación de actividad
+
+| Tipo | Condición |
+|------|-----------|
+| `INBOUND` | `exitedAt IS NULL` y `createdAt` en los últimos N minutos |
+| `OCCUPIED` | `exitedAt IS NULL` y `createdAt` anterior al umbral |
+| `OUTBOUND` | `exitedAt IS NOT NULL` y `exitedAt` es de hoy |
+
+`activeCount = inboundCount + occupiedCount` (todos los estacionados).
+
+### Tendencias
+
+```
+trend = ((hoy - ayer) / ayer) * 100
+```
+- `ayer === 0` y `hoy > 0` → `+100`
+- Ambos `0` → `0`
+- Redondeado a entero
+
+### Peak hour
+
+Recaudación agrupada por hora (00:00–01:00, 01:00–02:00, ...). Devuelve la hora con **mayor recaudación**, no la de más salidas.
 
 ---
 

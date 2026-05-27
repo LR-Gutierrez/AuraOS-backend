@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 const VALID_VEHICLE_TYPES = ['motorcycle', 'light', 'heavy'] as const;
@@ -58,7 +62,12 @@ export class VehicleEntriesService {
     return parts.join(' ');
   }
 
-  private computeFee(vehicleType: string, rate: number, createdAt: Date, exitedAt: Date): number {
+  private computeFee(
+    vehicleType: string,
+    rate: number,
+    createdAt: Date,
+    exitedAt: Date,
+  ): number {
     const diffMs = exitedAt.getTime() - createdAt.getTime();
     const days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
     return Math.round(rate * days * 100) / 100;
@@ -67,14 +76,19 @@ export class VehicleEntriesService {
   private formatEntry(entry: any) {
     const branch = entry.branch;
     const rateField = RATE_FIELD[entry.vehicleType];
-    const rate = rateField ? (branch as any)?.[rateField] ?? 0 : 0;
+    const rate = rateField ? (branch?.[rateField] ?? 0) : 0;
 
     let duration: string | null = null;
     let fee: number | null = null;
 
     if (entry.exitedAt) {
       duration = this.computeDuration(entry.createdAt, entry.exitedAt);
-      fee = this.computeFee(entry.vehicleType, rate, entry.createdAt, entry.exitedAt);
+      fee = this.computeFee(
+        entry.vehicleType,
+        rate,
+        entry.createdAt,
+        entry.exitedAt,
+      );
     }
 
     return {
@@ -220,7 +234,12 @@ export class VehicleEntriesService {
     for (const e of exitedToday) {
       const rateField = RATE_FIELD[e.vehicleType];
       const rate = (e.branch as any)?.[rateField] ?? 0;
-      todayRevenue += this.computeFee(e.vehicleType, rate, e.createdAt, e.exitedAt!);
+      todayRevenue += this.computeFee(
+        e.vehicleType,
+        rate,
+        e.createdAt,
+        e.exitedAt!,
+      );
     }
 
     return {
@@ -277,29 +296,37 @@ export class VehicleEntriesService {
     for (const e of todayExits) {
       const rateField = RATE_FIELD[e.vehicleType];
       const rate = (e.branch as any)?.[rateField] ?? 0;
-      todayRevenue += this.computeFee(e.vehicleType, rate, e.createdAt, e.exitedAt!);
+      todayRevenue += this.computeFee(
+        e.vehicleType,
+        rate,
+        e.createdAt,
+        e.exitedAt!,
+      );
       totalDurationMs += e.exitedAt!.getTime() - e.createdAt.getTime();
     }
 
-    const avgMinutes = todayExits.length > 0
-      ? Math.floor(totalDurationMs / 60000 / todayExits.length)
-      : 0;
+    const avgMinutes =
+      todayExits.length > 0
+        ? Math.floor(totalDurationMs / 60000 / todayExits.length)
+        : 0;
 
     const avgHours = Math.floor(avgMinutes / 60);
     const avgMins = avgMinutes % 60;
-    const averageStay = avgHours > 0 ? `${avgHours}h ${avgMins}m` : `${avgMins}m`;
+    const averageStay =
+      avgHours > 0 ? `${avgHours}h ${avgMins}m` : `${avgMins}m`;
 
-    const peakExitHour = todayExits.length > 0
-      ? todayExits
-          .map((e) => e.exitedAt!.getHours())
-          .reduce(
-            (acc, h) => {
-              acc[h] = (acc[h] || 0) + 1;
-              return acc;
-            },
-            {} as Record<number, number>,
-          )
-      : {};
+    const peakExitHour =
+      todayExits.length > 0
+        ? todayExits
+            .map((e) => e.exitedAt!.getHours())
+            .reduce(
+              (acc, h) => {
+                acc[h] = (acc[h] || 0) + 1;
+                return acc;
+              },
+              {} as Record<number, number>,
+            )
+        : {};
 
     const peakHour = Object.entries(peakExitHour).sort(
       (a, b) => b[1] - a[1],
