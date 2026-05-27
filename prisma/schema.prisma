@@ -52,6 +52,15 @@ model Branch {
   lightVehicleRate Float @default(0.0)
   heavyVehicleRate Float @default(0.0)
 
+  motorcycleOvernightRate   Float @default(0.0)
+  lightVehicleOvernightRate Float @default(0.0)
+  heavyVehicleOvernightRate Float @default(0.0)
+
+  openTimeWeekday  String @default("07:00")
+  closeTimeWeekday String @default("23:00")
+  openTimeWeekend  String @default("09:00")
+  closeTimeWeekend String @default("22:00")
+
   currency String @default("USD")
   favorite Boolean @default(false)
 

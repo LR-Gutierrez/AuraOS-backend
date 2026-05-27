@@ -225,17 +225,118 @@ Tamaño máximo: **10 MB** por archivo.
 
 ---
 
+## Cálculo de Fee (Tarifa Plana + Pernocta)
+
+Desde el 27/05/2026 el fee se calcula con **dos tarifas**:
+
+```
+fee = (días × tarifa_plana) + (noches × tarifa_pernocta)
+```
+
+- **días** = días calendario entre `createdAt` y `exitedAt` (inclusive)
+- **noches** = cruces de medianoche = `días - 1`
+
+| Escenario | Tarifa plana | Pernocta | Total (light: $5 / $15) |
+|-----------|:-----------:|:--------:|:----------------------:|
+| 10:00→14:00 mismo día | 1 | 0 | **$5** |
+| 20:00→01:00 (cruza medianoche) | 2 | 1 | **$25** |
+| 10:00→10:00 día siguiente | 2 | 1 | **$25** |
+| Sáb 10:00→Lun 10:00 | 3 | 2 | **$45** |
+
+## Tarifas por sucursal
+
+Cada `Branch` tiene estas tarifas configurables:
+
+| Campo | Default | Descripción |
+|-------|---------|-------------|
+| `motorcycleRate` | 0.0 | Tarifa plana — moto |
+| `lightVehicleRate` | 0.0 | Tarifa plana — liviano |
+| `heavyVehicleRate` | 0.0 | Tarifa plana — pesado |
+| `motorcycleOvernightRate` | 0.0 | Pernocta — moto |
+| `lightVehicleOvernightRate` | 0.0 | Pernocta — liviano |
+| `heavyVehicleOvernightRate` | 0.0 | Pernocta — pesado |
+| `openTimeWeekday` | 07:00 | Apertura Lun–Sáb |
+| `closeTimeWeekday` | 23:00 | Cierre Lun–Sáb |
+| `openTimeWeekend` | 09:00 | Apertura Dom/Feriado |
+| `closeTimeWeekend` | 22:00 | Cierre Dom/Feriado |
+
 ## Reglas de Negocio
 
 | Regla | Detalle |
 |-------|---------|
 | **1 heavy = 3 light** | Ocupación se calcula en equivalentes: `heavy × 3` |
 | **Ocupación** | Solo vehículos sin salir (exitedAt = null) |
-| **Fee** | `rate × ceil(días)` mínimo 1 día |
+| **Fee** | `(días × tarifa_plana) + (noches × tarifa_pernocta)` |
 | **Duración** | Diferencia entre createdAt y exitedAt |
 | **todaySummary** | Basado en exitedAt del día actual (00:00–23:59) |
 | **Alertas críticas** | Membresías con < 24h para vencer |
 | **VIP arrivals** | VIPs que ingresaron en la última hora y no han salido |
+
+---
+
+## ⚠️ Cambios que requiere el frontend (Mayo 2026)
+
+### 1. Modelo `Branch` — nuevos campos
+
+El objeto `Branch` ahora incluye:
+
+```kotlin
+data class Branch(
+    val id: String,
+    val name: String,
+    val address: String?,
+    val motorcycleCapacity: Int,
+    val lightVehicleCapacity: Int,
+    val heavyVehicleCapacity: Int,
+    val motorcycleRate: Double,
+    val lightVehicleRate: Double,
+    val heavyVehicleRate: Double,
+    // NUEVOS:
+    val motorcycleOvernightRate: Double,   // tarifa pernocta moto
+    val lightVehicleOvernightRate: Double, // tarifa pernocta liviano
+    val heavyVehicleOvernightRate: Double, // tarifa pernocta pesado
+    val openTimeWeekday: String,           // "07:00"
+    val closeTimeWeekday: String,          // "23:00"
+    val openTimeWeekend: String,           // "09:00"
+    val closeTimeWeekend: String,          // "22:00"
+    // ...
+)
+```
+
+### 2. Fee — el cálculo cambió
+
+**Antes** (lo que el frontend calculaba localmente):
+```
+fee = rate × ceil(días)
+```
+
+**Ahora** (lo devuelve el backend automáticamente):
+```
+fee = (días × tarifa_plana) + (noches × tarifa_pernocta)
+```
+
+El frontend ya **no debe calcular fees localmente**. El backend devuelve `fee` en cada entry y `totalRevenue` en todos los resúmenes.
+
+### 3. Vehicle Entry response — mismo formato, nuevo cálculo
+
+El `fee` que recibes en `GET /api/v1/vehicle-entries` y `PATCH /api/v1/vehicle-entries/:id/exit` ahora usa la nueva fórmula. No hay cambios en la estructura del JSON, solo en el valor.
+
+### 4. todayRevenue — también cambiado
+
+Todos los endpoints que devuelven `todayRevenue` o `totalRevenue` usan la nueva fórmula:
+- `GET /api/v1/vehicle-entries` → `meta.todaySummary.totalRevenue`
+- `GET /api/v1/branches/:branchId/entries/summary` → `todayRevenue`
+- `GET /api/v1/analytics/summary` → `totalRevenue`
+
+### 5. Regla de corte (midnight)
+
+La medianoche (00:00 UTC del servidor) es el punto de corte. Si el vehículo cruza la medianoche, se cobra una pernocta adicional. Esto es automático, el frontend no necesita calcularlo.
+
+### 6. UI — sugerencias
+
+- **Pantalla de tarifas**: Mostrar las tarifas plana y pernocta de cada Branch. Usar los nuevos campos `*OvernightRate`.
+- **Pantalla de detalle de salida**: Mostrar desglose opcional: "X días tarifa plana + Y noches pernocta".
+- **Horarios**: Si la app muestra horarios, usar `openTimeWeekday`/`closeTimeWeekday` y `openTimeWeekend`/`closeTimeWeekend` del Branch.
 
 ---
 

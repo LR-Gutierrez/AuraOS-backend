@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "Branch" ADD COLUMN     "closeTimeWeekday" TEXT NOT NULL DEFAULT '23:00',
+ADD COLUMN     "closeTimeWeekend" TEXT NOT NULL DEFAULT '22:00',
+ADD COLUMN     "heavyVehicleOvernightRate" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+ADD COLUMN     "lightVehicleOvernightRate" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+ADD COLUMN     "motorcycleOvernightRate" DOUBLE PRECISION NOT NULL DEFAULT 0.0,
+ADD COLUMN     "openTimeWeekday" TEXT NOT NULL DEFAULT '07:00',
+ADD COLUMN     "openTimeWeekend" TEXT NOT NULL DEFAULT '09:00';

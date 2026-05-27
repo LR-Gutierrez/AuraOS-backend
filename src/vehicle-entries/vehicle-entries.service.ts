@@ -13,6 +13,12 @@ const RATE_FIELD: Record<string, string> = {
   heavy: 'heavyVehicleRate',
 };
 
+const OVERNIGHT_RATE_FIELD: Record<string, string> = {
+  motorcycle: 'motorcycleOvernightRate',
+  light: 'lightVehicleOvernightRate',
+  heavy: 'heavyVehicleOvernightRate',
+};
+
 export interface CreateVehicleEntryData {
   id?: string;
   plate: string;
@@ -62,21 +68,37 @@ export class VehicleEntriesService {
     return parts.join(' ');
   }
 
+  private countCalendarDays(start: Date, end: Date): number {
+    const s = Date.UTC(
+      start.getUTCFullYear(),
+      start.getUTCMonth(),
+      start.getUTCDate(),
+    );
+    const e = Date.UTC(
+      end.getUTCFullYear(),
+      end.getUTCMonth(),
+      end.getUTCDate(),
+    );
+    return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1;
+  }
+
   private computeFee(
-    vehicleType: string,
-    rate: number,
+    flatRate: number,
+    overnightRate: number,
     createdAt: Date,
     exitedAt: Date,
   ): number {
-    const diffMs = exitedAt.getTime() - createdAt.getTime();
-    const days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-    return Math.round(rate * days * 100) / 100;
+    const days = this.countCalendarDays(createdAt, exitedAt);
+    const nights = Math.max(0, days - 1);
+    return Math.round((days * flatRate + nights * overnightRate) * 100) / 100;
   }
 
   private formatEntry(entry: any) {
     const branch = entry.branch;
     const rateField = RATE_FIELD[entry.vehicleType];
-    const rate = rateField ? (branch?.[rateField] ?? 0) : 0;
+    const overnightField = OVERNIGHT_RATE_FIELD[entry.vehicleType];
+    const flatRate = rateField ? (branch?.[rateField] ?? 0) : 0;
+    const overnightRate = overnightField ? (branch?.[overnightField] ?? 0) : 0;
 
     let duration: string | null = null;
     let fee: number | null = null;
@@ -84,8 +106,8 @@ export class VehicleEntriesService {
     if (entry.exitedAt) {
       duration = this.computeDuration(entry.createdAt, entry.exitedAt);
       fee = this.computeFee(
-        entry.vehicleType,
-        rate,
+        flatRate,
+        overnightRate,
         entry.createdAt,
         entry.exitedAt,
       );
@@ -233,10 +255,12 @@ export class VehicleEntriesService {
     let todayRevenue = 0;
     for (const e of exitedToday) {
       const rateField = RATE_FIELD[e.vehicleType];
-      const rate = (e.branch as any)?.[rateField] ?? 0;
+      const overnightField = OVERNIGHT_RATE_FIELD[e.vehicleType];
+      const flatRate = (e.branch as any)?.[rateField] ?? 0;
+      const overnightRate = (e.branch as any)?.[overnightField] ?? 0;
       todayRevenue += this.computeFee(
-        e.vehicleType,
-        rate,
+        flatRate,
+        overnightRate,
         e.createdAt,
         e.exitedAt!,
       );
@@ -295,10 +319,12 @@ export class VehicleEntriesService {
 
     for (const e of todayExits) {
       const rateField = RATE_FIELD[e.vehicleType];
-      const rate = (e.branch as any)?.[rateField] ?? 0;
+      const overnightField = OVERNIGHT_RATE_FIELD[e.vehicleType];
+      const flatRate = (e.branch as any)?.[rateField] ?? 0;
+      const overnightRate = (e.branch as any)?.[overnightField] ?? 0;
       todayRevenue += this.computeFee(
-        e.vehicleType,
-        rate,
+        flatRate,
+        overnightRate,
         e.createdAt,
         e.exitedAt!,
       );

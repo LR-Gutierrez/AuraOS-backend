@@ -7,6 +7,12 @@ const RATE_FIELD: Record<string, string> = {
   heavy: 'heavyVehicleRate',
 };
 
+const OVERNIGHT_RATE_FIELD: Record<string, string> = {
+  motorcycle: 'motorcycleOvernightRate',
+  light: 'lightVehicleOvernightRate',
+  heavy: 'heavyVehicleOvernightRate',
+};
+
 export interface AnalyticsSummaryResponse {
   branchId: string;
   date: string;
@@ -101,10 +107,14 @@ export class AnalyticsService {
     const hourlyRevenue: Record<number, number> = {};
 
     for (const e of todayExits) {
-      const rate = this.getBranchRate(e.branch, e.vehicleType);
-      const fee = this.computeFee(
+      const flatRate = this.getBranchRate(e.branch, e.vehicleType);
+      const overnightRate = this.getBranchOvernightRate(
+        e.branch,
         e.vehicleType,
-        rate,
+      );
+      const fee = this.computeFee(
+        flatRate,
+        overnightRate,
         e.createdAt,
         e.exitedAt!,
       );
@@ -144,10 +154,14 @@ export class AnalyticsService {
 
     let yesterdayRevenue = 0;
     for (const e of yesterdayExits) {
-      const rate = this.getBranchRate(e.branch, e.vehicleType);
-      yesterdayRevenue += this.computeFee(
+      const flatRate = this.getBranchRate(e.branch, e.vehicleType);
+      const overnightRate = this.getBranchOvernightRate(
+        e.branch,
         e.vehicleType,
-        rate,
+      );
+      yesterdayRevenue += this.computeFee(
+        flatRate,
+        overnightRate,
         e.createdAt,
         e.exitedAt!,
       );
@@ -182,26 +196,44 @@ export class AnalyticsService {
   }
 
   private getBranchRate(
-    branch: {
-      motorcycleRate: number;
-      lightVehicleRate: number;
-      heavyVehicleRate: number;
-    },
+    branch: Record<string, unknown>,
     vehicleType: string,
   ): number {
     const field = RATE_FIELD[vehicleType];
-    return field ? branch[field as keyof typeof branch] : 0;
+    return field ? ((branch[field] as number) ?? 0) : 0;
+  }
+
+  private getBranchOvernightRate(
+    branch: Record<string, unknown>,
+    vehicleType: string,
+  ): number {
+    const field = OVERNIGHT_RATE_FIELD[vehicleType];
+    return field ? ((branch[field] as number) ?? 0) : 0;
+  }
+
+  private countCalendarDays(start: Date, end: Date): number {
+    const s = Date.UTC(
+      start.getUTCFullYear(),
+      start.getUTCMonth(),
+      start.getUTCDate(),
+    );
+    const e = Date.UTC(
+      end.getUTCFullYear(),
+      end.getUTCMonth(),
+      end.getUTCDate(),
+    );
+    return Math.floor((e - s) / (1000 * 60 * 60 * 24)) + 1;
   }
 
   private computeFee(
-    vehicleType: string,
-    rate: number,
+    flatRate: number,
+    overnightRate: number,
     createdAt: Date,
     exitedAt: Date,
   ): number {
-    const diffMs = exitedAt.getTime() - createdAt.getTime();
-    const days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-    return Math.round(rate * days * 100) / 100;
+    const days = this.countCalendarDays(createdAt, exitedAt);
+    const nights = Math.max(0, days - 1);
+    return Math.round((days * flatRate + nights * overnightRate) * 100) / 100;
   }
 
   private getUTCDayStart(date: Date): Date {

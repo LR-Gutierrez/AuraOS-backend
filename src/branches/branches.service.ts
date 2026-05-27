@@ -18,6 +18,13 @@ export class BranchesService {
         motorcycleRate: data.motorcycleRate ?? 0.0,
         lightVehicleRate: data.lightVehicleRate ?? 0.0,
         heavyVehicleRate: data.heavyVehicleRate ?? 0.0,
+        motorcycleOvernightRate: data.motorcycleOvernightRate ?? 0.0,
+        lightVehicleOvernightRate: data.lightVehicleOvernightRate ?? 0.0,
+        heavyVehicleOvernightRate: data.heavyVehicleOvernightRate ?? 0.0,
+        openTimeWeekday: data.openTimeWeekday ?? '07:00',
+        closeTimeWeekday: data.closeTimeWeekday ?? '23:00',
+        openTimeWeekend: data.openTimeWeekend ?? '09:00',
+        closeTimeWeekend: data.closeTimeWeekend ?? '22:00',
         currency: data.currency ?? 'USD',
       },
     });

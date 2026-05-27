@@ -5,6 +5,7 @@ import {
   Min,
   IsNumber,
   IsIn,
+  Matches,
 } from 'class-validator';
 
 export class CreateBranchDto {
@@ -44,6 +45,41 @@ export class CreateBranchDto {
   @IsNumber()
   @Min(0)
   heavyVehicleRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  motorcycleOvernightRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  lightVehicleOvernightRate?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  heavyVehicleOvernightRate?: number;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{2}:\d{2}$/)
+  openTimeWeekday?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{2}:\d{2}$/)
+  closeTimeWeekday?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{2}:\d{2}$/)
+  openTimeWeekend?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{2}:\d{2}$/)
+  closeTimeWeekend?: string;
 
   @IsOptional()
   @IsString()
