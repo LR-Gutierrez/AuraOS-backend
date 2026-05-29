@@ -204,9 +204,16 @@ Authorization: Bearer <token>
 }
 ```
 
-- `occupiedBays` cuenta solo vehículos **sin salir** (exitedAt = null).
-- `vipArrivals` solo muestra VIPs que ingresaron en la última hora y no han salido.
-- `dailyRevenue` suma de (cantidad de cada tipo × su tarifa) para ingresos de hoy.
+| Campo | Cálculo |
+|-------|---------|
+| `occupancyPercent` | (activos / capacidad total equivalente) × 100 |
+| `occupiedBays` | Espacios equivalentes ocupados ahora (`exitedAt = null`) |
+| `totalBays` | `motorcycleCapacity + lightVehicleCapacity + (heavyCapacity × 3)` |
+| `trendPercent` | % de cambio vs ayer a la misma hora |
+| `dailyRevenue` | Suma de tarifas planas de ingresos de hoy (sin pernocta) |
+| `activeMemberships` | Membresías activas de esta sucursal |
+| `criticalAlertsCount` | Membresías activas que vencen en < 24h |
+| `vipArrivals` | VIPs que ingresaron en la última hora y no han salido |
 
 ---
 
@@ -344,5 +351,18 @@ La medianoche (00:00 UTC del servidor) es el punto de corte. Si el vehículo cru
 
 - CORS abierto a cualquier origen.
 - Los POST/PATCH tienen validación automática con `class-validator`.
-- El token JWT expira en 24h.
+- El token JWT expira en 24h. Solo el dashboard requiere auth.
 - La base de datos tiene índices en `branchId` para VehicleEntry y Membership.
+
+## Datos de prueba
+
+```sql
+-- Membresías próximas a vencer (< 24h)
+INSERT INTO "Membership" (id, "memberName", tier, "startDate", "endDate", "isActive", "branchId")
+VALUES
+  (gen_random_uuid(), 'Juan Pérez', 'Elite',   NOW(), NOW() + interval '1 hour', true, '<branch-id>'),
+  (gen_random_uuid(), 'María García', 'Premium', NOW(), NOW() + interval '30 minutes', true, '<branch-id>');
+
+-- Vehículo VIP (isVip: true al crearlo)
+POST /api/v1/vehicle-entries con form-data: isVip="true"
+```
