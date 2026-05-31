@@ -14,17 +14,33 @@ async function main() {
     throw new Error('No hay ninguna sucursal en la BD. Ejecuta las migrations primero.');
   }
 
-  if (!branch.favorite) {
-    branch = await prisma.branch.update({
-      where: { id: branch.id },
-      data: { favorite: true },
-    });
-  }
+  branch = await prisma.branch.update({
+    where: { id: branch.id },
+    data: {
+      name: 'SmartPark Centro',
+      address: 'Av. Principal 123, Centro',
+      motorcycleCapacity: 20,
+      lightVehicleCapacity: 50,
+      heavyVehicleCapacity: 20,
+      motorcycleRate: 3,
+      lightVehicleRate: 5,
+      heavyVehicleRate: 7,
+      motorcycleOvernightRate: 5,
+      lightVehicleOvernightRate: 10,
+      heavyVehicleOvernightRate: 15.0,
+      openTimeWeekday: '07:00',
+      closeTimeWeekday: '23:00',
+      openTimeWeekend: '09:00',
+      closeTimeWeekend: '22:00',
+      currency: 'USD',
+      favorite: true,
+    },
+  });
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash('123456', salt);
 
-  const user = await prisma.user.upsert({
+  const user1 = await prisma.user.upsert({
     where: { email: 'luisangelrgr@gmail.com' },
     update: {},
     create: {
@@ -34,6 +50,49 @@ async function main() {
       role: 'admin',
     },
   });
+
+  const hashedPasswordAdmin = await bcrypt.hash('admin123', salt);
+
+  const user2 = await prisma.user.upsert({
+    where: { email: 'admin@smartpark.com' },
+    update: {},
+    create: {
+      email: 'admin@smartpark.com',
+      password: hashedPasswordAdmin,
+      name: 'Administrador',
+      role: 'admin',
+    },
+  });
+
+  const vehicleEntries = await Promise.all([
+    prisma.vehicleEntry.create({
+      data: {
+        plate: 'ABC-1234',
+        vehicleType: 'light',
+        isVip: false,
+        branchId: branch.id,
+        createdAt: new Date('2026-05-31T12:00:00Z'),
+      },
+    }),
+    prisma.vehicleEntry.create({
+      data: {
+        plate: 'XYZ-7890',
+        vehicleType: 'heavy',
+        isVip: false,
+        branchId: branch.id,
+        createdAt: new Date('2026-05-31T13:30:00Z'),
+      },
+    }),
+    prisma.vehicleEntry.create({
+      data: {
+        plate: 'VIP-001',
+        vehicleType: 'light',
+        isVip: true,
+        branchId: branch.id,
+        createdAt: new Date('2026-05-31T11:00:00Z'),
+      },
+    }),
+  ]);
 
   const memberships = await Promise.all([
     prisma.membership.upsert({
@@ -62,11 +121,25 @@ async function main() {
         branchId: branch.id,
       },
     }),
+    prisma.membership.upsert({
+      where: { id: '00000000-0000-0000-0000-000000000004' },
+      update: {},
+      create: {
+        id: '00000000-0000-0000-0000-000000000004',
+        memberName: 'Carlos López',
+        tier: 'PREMIUM',
+        startDate: new Date('2026-05-01'),
+        endDate: new Date('2026-06-01'),
+        isActive: true,
+        branchId: branch.id,
+      },
+    }),
   ]);
 
   console.log('Seed completado:', {
     sucursal: branch.name,
-    usuario: user.email,
+    usuarios: [user1.email, user2.email],
+    vehiculos: vehicleEntries.length,
     membresías: memberships.length,
   });
 }

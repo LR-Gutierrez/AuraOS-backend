@@ -199,7 +199,7 @@ export class AnalyticsService {
     branch: Record<string, unknown>,
     vehicleType: string,
   ): number {
-    const field = RATE_FIELD[vehicleType];
+    const field = RATE_FIELD[vehicleType?.toLowerCase()];
     return field ? ((branch[field] as number) ?? 0) : 0;
   }
 
@@ -207,7 +207,7 @@ export class AnalyticsService {
     branch: Record<string, unknown>,
     vehicleType: string,
   ): number {
-    const field = OVERNIGHT_RATE_FIELD[vehicleType];
+    const field = OVERNIGHT_RATE_FIELD[vehicleType?.toLowerCase()];
     return field ? ((branch[field] as number) ?? 0) : 0;
   }
 

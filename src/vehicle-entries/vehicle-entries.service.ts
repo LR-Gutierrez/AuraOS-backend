@@ -95,8 +95,9 @@ export class VehicleEntriesService {
 
   private formatEntry(entry: any) {
     const branch = entry.branch;
-    const rateField = RATE_FIELD[entry.vehicleType];
-    const overnightField = OVERNIGHT_RATE_FIELD[entry.vehicleType];
+    const vt = entry.vehicleType?.toLowerCase();
+    const rateField = RATE_FIELD[vt];
+    const overnightField = OVERNIGHT_RATE_FIELD[vt];
     const flatRate = rateField ? (branch?.[rateField] ?? 0) : 0;
     const overnightRate = overnightField ? (branch?.[overnightField] ?? 0) : 0;
 
@@ -254,8 +255,9 @@ export class VehicleEntriesService {
 
     let todayRevenue = 0;
     for (const e of exitedToday) {
-      const rateField = RATE_FIELD[e.vehicleType];
-      const overnightField = OVERNIGHT_RATE_FIELD[e.vehicleType];
+      const vt = e.vehicleType?.toLowerCase();
+      const rateField = RATE_FIELD[vt];
+      const overnightField = OVERNIGHT_RATE_FIELD[vt];
       const flatRate = (e.branch as any)?.[rateField] ?? 0;
       const overnightRate = (e.branch as any)?.[overnightField] ?? 0;
       todayRevenue += this.computeFee(
@@ -318,8 +320,9 @@ export class VehicleEntriesService {
     let totalDurationMs = 0;
 
     for (const e of todayExits) {
-      const rateField = RATE_FIELD[e.vehicleType];
-      const overnightField = OVERNIGHT_RATE_FIELD[e.vehicleType];
+      const vt = e.vehicleType?.toLowerCase();
+      const rateField = RATE_FIELD[vt];
+      const overnightField = OVERNIGHT_RATE_FIELD[vt];
       const flatRate = (e.branch as any)?.[rateField] ?? 0;
       const overnightRate = (e.branch as any)?.[overnightField] ?? 0;
       todayRevenue += this.computeFee(
