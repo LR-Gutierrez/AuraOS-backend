@@ -107,6 +107,7 @@ export class AnalyticsService {
     const hourlyRevenue: Record<number, number> = {};
 
     for (const e of todayExits) {
+      if (e.membershipId) continue;
       const flatRate = this.getBranchRate(e.branch, e.vehicleType);
       const overnightRate = this.getBranchOvernightRate(
         e.branch,

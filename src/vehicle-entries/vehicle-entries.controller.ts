@@ -72,6 +72,7 @@ export class VehicleEntriesController {
     @Body('vehicleType') vehicleType: string,
     @Body('branchId') branchId: string,
     @Body('isVip') isVip: string | undefined,
+    @Body('membershipId') membershipId: string | undefined,
     @UploadedFiles()
     files: {
       platePhoto?: Express.Multer.File[];
@@ -118,6 +119,7 @@ export class VehicleEntriesController {
       vehicleType,
       branchId,
       isVip: vip,
+      membershipId,
       platePhotoUrl,
       frontPhotoUrl,
       rearPhotoUrl,

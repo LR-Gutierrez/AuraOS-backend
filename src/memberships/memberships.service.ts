@@ -7,6 +7,13 @@ import { UpdateMembershipDto } from './dto/update-membership.dto';
 export class MembershipsService {
   constructor(private prisma: PrismaService) {}
 
+  private format(m: any) {
+    return {
+      ...m,
+      isActive: m.isActive && m.endDate > new Date(),
+    };
+  }
+
   async create(dto: CreateMembershipDto) {
     const branch = await this.prisma.branch.findUnique({
       where: { id: dto.branchId },
@@ -15,7 +22,7 @@ export class MembershipsService {
       throw new NotFoundException(`Branch with ID ${dto.branchId} not found`);
     }
 
-    return this.prisma.membership.create({
+    const membership = await this.prisma.membership.create({
       data: {
         memberName: dto.memberName,
         tier: dto.tier ?? 'Regular',
@@ -25,13 +32,15 @@ export class MembershipsService {
         branchId: dto.branchId,
       },
     });
+    return this.format(membership);
   }
 
   async findAll(branchId?: string) {
-    return this.prisma.membership.findMany({
+    const memberships = await this.prisma.membership.findMany({
       where: branchId ? { branchId } : undefined,
       orderBy: { createdAt: 'desc' },
     });
+    return memberships.map((m) => this.format(m));
   }
 
   async findOne(id: string) {
@@ -41,12 +50,12 @@ export class MembershipsService {
     if (!membership) {
       throw new NotFoundException(`Membership with ID ${id} not found`);
     }
-    return membership;
+    return this.format(membership);
   }
 
   async update(id: string, dto: UpdateMembershipDto) {
     await this.findOne(id);
-    return this.prisma.membership.update({
+    const membership = await this.prisma.membership.update({
       where: { id },
       data: {
         ...dto,
@@ -54,6 +63,7 @@ export class MembershipsService {
         ...(dto.endDate && { endDate: new Date(dto.endDate) }),
       },
     });
+    return this.format(membership);
   }
 
   async remove(id: string) {

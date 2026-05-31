@@ -14,4 +14,8 @@ export class CreateVehicleEntryDto {
   @IsOptional()
   @IsBoolean()
   isVip?: boolean;
+
+  @IsOptional()
+  @IsString()
+  membershipId?: string;
 }

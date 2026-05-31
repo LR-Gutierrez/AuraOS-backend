@@ -25,6 +25,7 @@ export interface CreateVehicleEntryData {
   vehicleType: string;
   branchId: string;
   isVip?: boolean;
+  membershipId?: string;
   platePhotoUrl?: string;
   frontPhotoUrl?: string;
   rearPhotoUrl?: string;
@@ -35,6 +36,7 @@ export interface CreateVehicleEntryData {
 export interface VehicleEntryFilters {
   branchId?: string;
   plate?: string;
+  membershipId?: string;
   exited?: boolean;
   from?: string;
   to?: string;
@@ -106,12 +108,14 @@ export class VehicleEntriesService {
 
     if (entry.exitedAt) {
       duration = this.computeDuration(entry.createdAt, entry.exitedAt);
-      fee = this.computeFee(
-        flatRate,
-        overnightRate,
-        entry.createdAt,
-        entry.exitedAt,
-      );
+      fee = entry.membershipId
+        ? 0
+        : this.computeFee(
+            flatRate,
+            overnightRate,
+            entry.createdAt,
+            entry.exitedAt,
+          );
     }
 
     return {
@@ -119,6 +123,8 @@ export class VehicleEntriesService {
       plate: entry.plate,
       vehicleType: entry.vehicleType,
       isVip: entry.isVip,
+      membershipId: entry.membershipId,
+      memberName: entry.membership?.memberName ?? null,
       branchId: entry.branchId,
       platePhotoUrl: this.toRelativeUrl(entry.platePhotoUrl),
       frontPhotoUrl: this.toRelativeUrl(entry.frontPhotoUrl),
@@ -150,6 +156,32 @@ export class VehicleEntriesService {
       throw new NotFoundException(`Branch with ID ${data.branchId} not found`);
     }
 
+    if (data.membershipId) {
+      const membership = await this.prisma.membership.findUnique({
+        where: { id: data.membershipId },
+      });
+
+      if (!membership) {
+        throw new NotFoundException(`Membership with ID ${data.membershipId} not found`);
+      }
+
+      if (!membership.isActive || membership.endDate <= new Date()) {
+        throw new BadRequestException('La membresía no está activa');
+      }
+
+      if (membership.branchId !== data.branchId) {
+        throw new BadRequestException('La membresía no pertenece a esta sucursal');
+      }
+
+      const activeEntry = await this.prisma.vehicleEntry.findFirst({
+        where: { membershipId: data.membershipId, exitedAt: null },
+      });
+
+      if (activeEntry) {
+        throw new BadRequestException('El socio ya tiene un vehículo activo en el estacionamiento');
+      }
+    }
+
     try {
       const entry = await this.prisma.vehicleEntry.create({
         data: {
@@ -157,14 +189,15 @@ export class VehicleEntriesService {
           plate: data.plate,
           vehicleType,
           branchId: data.branchId,
-          isVip: data.isVip,
+          isVip: data.membershipId ? true : (data.isVip ?? false),
+          membershipId: data.membershipId,
           platePhotoUrl: data.platePhotoUrl,
           frontPhotoUrl: data.frontPhotoUrl,
           rearPhotoUrl: data.rearPhotoUrl,
           leftPhotoUrl: data.leftPhotoUrl,
           rightPhotoUrl: data.rightPhotoUrl,
         },
-        include: { branch: true },
+        include: { branch: true, membership: true },
       });
 
       return {
@@ -194,7 +227,7 @@ export class VehicleEntriesService {
     const updated = await this.prisma.vehicleEntry.update({
       where: { id },
       data: { exitedAt: exitedAt ? new Date(exitedAt) : new Date() },
-      include: { branch: true },
+      include: { branch: true, membership: true },
     });
 
     return {
@@ -219,6 +252,10 @@ export class VehicleEntriesService {
       where.plate = { contains: filters.plate, mode: 'insensitive' };
     }
 
+    if (filters?.membershipId) {
+      where.membershipId = filters.membershipId;
+    }
+
     if (filters?.exited === true) {
       where.exitedAt = { not: null };
     } else if (filters?.exited === false) {
@@ -241,7 +278,7 @@ export class VehicleEntriesService {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
-        include: { branch: true },
+        include: { branch: true, membership: true },
       }),
       this.prisma.vehicleEntry.count({ where }),
     ]);
@@ -255,6 +292,7 @@ export class VehicleEntriesService {
 
     let todayRevenue = 0;
     for (const e of exitedToday) {
+      if (e.membershipId) continue;
       const vt = e.vehicleType?.toLowerCase();
       const rateField = RATE_FIELD[vt];
       const overnightField = OVERNIGHT_RATE_FIELD[vt];
@@ -286,7 +324,7 @@ export class VehicleEntriesService {
   async findOne(id: string) {
     const entry = await this.prisma.vehicleEntry.findUnique({
       where: { id },
-      include: { branch: true },
+      include: { branch: true, membership: true },
     });
 
     if (!entry) {
@@ -313,13 +351,14 @@ export class VehicleEntriesService {
         branchId,
         exitedAt: { not: null, gte: todayStart },
       },
-      include: { branch: true },
+      include: { branch: true, membership: true },
     });
 
     let todayRevenue = 0;
     let totalDurationMs = 0;
 
     for (const e of todayExits) {
+      if (e.membershipId) continue;
       const vt = e.vehicleType?.toLowerCase();
       const rateField = RATE_FIELD[vt];
       const overnightField = OVERNIGHT_RATE_FIELD[vt];

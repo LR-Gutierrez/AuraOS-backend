@@ -95,11 +95,8 @@ async function main() {
   ]);
 
   const memberships = await Promise.all([
-    prisma.membership.upsert({
-      where: { id: '00000000-0000-0000-0000-000000000002' },
-      update: {},
-      create: {
-        id: '00000000-0000-0000-0000-000000000002',
+    prisma.membership.create({
+      data: {
         memberName: 'Juan Pérez',
         tier: 'Elite',
         startDate: new Date(),
@@ -108,11 +105,8 @@ async function main() {
         branchId: branch.id,
       },
     }),
-    prisma.membership.upsert({
-      where: { id: '00000000-0000-0000-0000-000000000003' },
-      update: {},
-      create: {
-        id: '00000000-0000-0000-0000-000000000003',
+    prisma.membership.create({
+      data: {
         memberName: 'María García',
         tier: 'Premium',
         startDate: new Date(),
@@ -121,11 +115,8 @@ async function main() {
         branchId: branch.id,
       },
     }),
-    prisma.membership.upsert({
-      where: { id: '00000000-0000-0000-0000-000000000004' },
-      update: {},
-      create: {
-        id: '00000000-0000-0000-0000-000000000004',
+    prisma.membership.create({
+      data: {
         memberName: 'Carlos López',
         tier: 'PREMIUM',
         startDate: new Date('2026-05-01'),
