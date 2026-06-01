@@ -78,6 +78,7 @@ model Membership {
   id            String         @id @default(uuid())
   memberName    String
   tier          String         @default("Regular")
+  cardUuid      String?        @unique
   startDate     DateTime
   endDate       DateTime
   isActive      Boolean        @default(true)

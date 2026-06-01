@@ -26,6 +26,7 @@ export class MembershipsService {
       data: {
         memberName: dto.memberName,
         tier: dto.tier ?? 'Regular',
+        ...(dto.cardUuid && { cardUuid: dto.cardUuid }),
         startDate: new Date(dto.startDate),
         endDate: new Date(dto.endDate),
         isActive: dto.isActive ?? true,
@@ -49,6 +50,16 @@ export class MembershipsService {
     });
     if (!membership) {
       throw new NotFoundException(`Membership with ID ${id} not found`);
+    }
+    return this.format(membership);
+  }
+
+  async findByCardUuid(cardUuid: string) {
+    const membership = await this.prisma.membership.findUnique({
+      where: { cardUuid },
+    });
+    if (!membership) {
+      throw new NotFoundException(`No se encontró una membresía con la tarjeta ${cardUuid}`);
     }
     return this.format(membership);
   }

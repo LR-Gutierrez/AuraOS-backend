@@ -29,6 +29,11 @@ export class MembershipsController {
     return this.membershipsService.findAll(branchId);
   }
 
+  @Get('by-card/:cardUuid')
+  findByCardUuid(@Param('cardUuid') cardUuid: string) {
+    return this.membershipsService.findByCardUuid(cardUuid);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.membershipsService.findOne(id);

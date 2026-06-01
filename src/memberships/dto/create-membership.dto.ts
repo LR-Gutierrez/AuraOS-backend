@@ -15,6 +15,10 @@ export class CreateMembershipDto {
   @IsIn(['Regular', 'Premium', 'Elite'])
   tier?: string;
 
+  @IsOptional()
+  @IsString()
+  cardUuid?: string;
+
   @IsDateString()
   startDate: string;
 
