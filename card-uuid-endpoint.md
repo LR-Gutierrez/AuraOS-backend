@@ -1,33 +1,55 @@
 # cardUuid — Integración Frontend
 
-## Endpoint nuevo
+## Endpoints
+
+### Buscar membresía por tarjeta NFC
 
 **`GET /api/v1/memberships/by-card/:cardUuid`**
-
-Busca una membresía por el UUID de la tarjera NFC.
 
 | Respuesta | Descripción |
 |---|---|
 | `200` | Retorna la membresía encontrada |
 | `404` | `"No se encontró una membresía con la tarjeta {cardUuid}"` |
 
+### Registrar tarjeta a un socio
+
+**`POST /api/v1/memberships/:id/register-card`**
+
+```json
+{ "cardUuid": "A1B2C3D4-E5F6-7890-ABCD-EF1234567890" }
+```
+
+| Respuesta | Descripción |
+|---|---|
+| `200` | Tarjeta asignada correctamente |
+| `404` | El socio no existe |
+| `409` | `"La tarjeta {cardUuid} ya está asignada a otro socio"` |
+
+### Desvincular tarjeta de un socio
+
+**`POST /api/v1/memberships/:id/unregister-card`**
+
+| Respuesta | Descripción |
+|---|---|
+| `200` | Tarjeta removida (`cardUuid: null`) |
+| `400` | `"El socio no tiene una tarjeta asignada"` |
+| `404` | El socio no existe |
+
 ---
 
-## Endpoint existente (registrar ingreso)
+## Registrar ingreso por NFC
 
 **`POST /api/v1/vehicle-entries`** (multipart/form-data)
 
-Para registrar la entrada de un socio por NFC, envía:
-
 | Campo | Valor |
 |---|---|
-| `plate` | `"NFC"` (o cualquier dummy) |
+| `plate` | `"NFC"` (dummy) |
 | `vehicleType` | `"light"` |
 | `branchId` | ID de la sucursal |
 | `membershipId` | ID obtenido del `by-card` endpoint |
-| `platePhoto` | Foto de la placa (obligatorio) |
+| `platePhoto` | Foto de la placa |
 
-El backend fuerza `isVip: true`, valida que la membresía esté activa, y bloquea si el socio ya tiene un vehículo dentro.
+El backend fuerza `isVip: true`, valida membresía activa, y bloquea si el socio ya tiene un vehículo dentro.
 
 ---
 
@@ -38,8 +60,9 @@ El backend fuerza `isVip: true`, valida que la membresía esté activa, y bloque
 | `prisma/schema.prisma` | `cardUuid String? @unique` en Membership |
 | `prisma/migrations/...add_card_uuid...` | Migración con columna + unique index |
 | `src/memberships/dto/create-membership.dto.ts` | `cardUuid` opcional |
-| `src/memberships/memberships.service.ts` | Método `findByCardUuid()` |
-| `src/memberships/memberships.controller.ts` | Ruta `by-card/:cardUuid` (antes de `:id`) |
+| `src/memberships/dto/register-card.dto.ts` | DTO para registrar tarjeta |
+| `src/memberships/memberships.service.ts` | `findByCardUuid()`, `registerCard()`, `unregisterCard()` |
+| `src/memberships/memberships.controller.ts` | Rutas `by-card/:cardUuid`, `register-card`, `unregister-card` |
 | `prisma/seed.ts` | Juan Pérez y María García con `cardUuid` |
 
 ---

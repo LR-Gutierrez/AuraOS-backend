@@ -23,6 +23,7 @@ import { existsSync, mkdirSync } from 'fs';
 import { VehicleEntriesService } from './vehicle-entries.service';
 import { MulterErrorFilter } from './multer-error.filter';
 import { ExitVehicleDto } from './dto/exit-vehicle.dto';
+import { NfcEntryDto } from './dto/nfc-entry.dto';
 
 const uploadBaseDir = join(process.cwd(), 'uploads', 'vehicle-entries');
 if (!existsSync(uploadBaseDir)) {
@@ -126,6 +127,12 @@ export class VehicleEntriesController {
       leftPhotoUrl,
       rightPhotoUrl,
     });
+  }
+
+  @Post('vehicle-entries/nfc-entry')
+  @HttpCode(HttpStatus.OK)
+  async nfcEntry(@Body() dto: NfcEntryDto) {
+    return this.vehicleEntriesService.nfcEntry(dto.cardUuid);
   }
 
   @Patch('vehicle-entries/:id/exit')

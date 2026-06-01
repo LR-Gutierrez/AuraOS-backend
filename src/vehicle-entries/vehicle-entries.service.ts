@@ -211,6 +211,45 @@ export class VehicleEntriesService {
     }
   }
 
+  async nfcEntry(cardUuid: string) {
+    const membership = await this.prisma.membership.findUnique({
+      where: { cardUuid },
+    });
+
+    if (!membership) {
+      throw new NotFoundException(`No se encontró una membresía con la tarjeta ${cardUuid}`);
+    }
+
+    if (!membership.isActive || membership.endDate <= new Date()) {
+      throw new BadRequestException('La membresía no está activa');
+    }
+
+    const activeEntry = await this.prisma.vehicleEntry.findFirst({
+      where: { membershipId: membership.id, exitedAt: null },
+    });
+
+    if (activeEntry) {
+      throw new BadRequestException('El socio ya tiene un vehículo activo en el estacionamiento');
+    }
+
+    const entry = await this.prisma.vehicleEntry.create({
+      data: {
+        plate: 'NFC',
+        vehicleType: 'light',
+        branchId: membership.branchId,
+        isVip: true,
+        membershipId: membership.id,
+      },
+      include: { branch: true, membership: true },
+    });
+
+    return {
+      success: true,
+      message: 'Ingreso registrado exitosamente por NFC',
+      data: this.formatEntry(entry),
+    };
+  }
+
   async exitVehicle(id: string, exitedAt?: string) {
     const entry = await this.prisma.vehicleEntry.findUnique({
       where: { id },
