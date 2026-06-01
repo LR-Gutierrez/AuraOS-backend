@@ -94,13 +94,14 @@ async function main() {
     }),
   ]);
 
+  const oneMonthMs = 30 * 24 * 60 * 60 * 1000;
   const memberships = await Promise.all([
     prisma.membership.create({
       data: {
         memberName: 'Juan Pérez',
         tier: 'Elite',
         startDate: new Date(),
-        endDate: new Date(Date.now() + 60 * 60 * 1000),
+        endDate: new Date(Date.now() + oneMonthMs),
         isActive: true,
         branchId: branch.id,
       },
@@ -120,12 +121,20 @@ async function main() {
         memberName: 'Carlos López',
         tier: 'PREMIUM',
         startDate: new Date('2026-05-01'),
-        endDate: new Date('2026-06-01'),
-        isActive: true,
+        endDate: new Date('2026-05-15'),
+        isActive: false,
         branchId: branch.id,
       },
     }),
   ]);
+
+  await prisma.vehicleEntry.update({
+    where: { id: vehicleEntries[2].id },
+    data: {
+      membershipId: memberships[0].id,
+      isVip: true,
+    },
+  });
 
   console.log('Seed completado:', {
     sucursal: branch.name,
