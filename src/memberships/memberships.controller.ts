@@ -13,6 +13,7 @@ import {
 import { MembershipsService } from './memberships.service';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
+import { RegisterCardDto } from './dto/register-card.dto';
 
 @Controller('api/v1/memberships')
 export class MembershipsController {
@@ -37,6 +38,18 @@ export class MembershipsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.membershipsService.findOne(id);
+  }
+
+  @Post(':id/register-card')
+  @HttpCode(HttpStatus.OK)
+  registerCard(@Param('id') id: string, @Body() dto: RegisterCardDto) {
+    return this.membershipsService.registerCard(id, dto.cardUuid);
+  }
+
+  @Post(':id/unregister-card')
+  @HttpCode(HttpStatus.OK)
+  unregisterCard(@Param('id') id: string) {
+    return this.membershipsService.unregisterCard(id);
   }
 
   @Patch(':id')

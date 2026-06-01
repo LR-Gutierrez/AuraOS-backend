@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
 
@@ -62,6 +63,47 @@ export class MembershipsService {
       throw new NotFoundException(`No se encontró una membresía con la tarjeta ${cardUuid}`);
     }
     return this.format(membership);
+  }
+
+  async registerCard(id: string, cardUuid: string) {
+    const membership = await this.prisma.membership.findUnique({
+      where: { id },
+    });
+    if (!membership) {
+      throw new NotFoundException(`Membership with ID ${id} not found`);
+    }
+
+    const existing = await this.prisma.membership.findUnique({
+      where: { cardUuid },
+    });
+    if (existing) {
+      throw new ConflictException(`La tarjeta ${cardUuid} ya está asignada a otro socio`);
+    }
+
+    const updated = await this.prisma.membership.update({
+      where: { id },
+      data: { cardUuid },
+    });
+    return this.format(updated);
+  }
+
+  async unregisterCard(id: string) {
+    const membership = await this.prisma.membership.findUnique({
+      where: { id },
+    });
+    if (!membership) {
+      throw new NotFoundException(`Membership with ID ${id} not found`);
+    }
+
+    if (!membership.cardUuid) {
+      throw new BadRequestException('El socio no tiene una tarjeta asignada');
+    }
+
+    const updated = await this.prisma.membership.update({
+      where: { id },
+      data: { cardUuid: null },
+    });
+    return this.format(updated);
   }
 
   async update(id: string, dto: UpdateMembershipDto) {
