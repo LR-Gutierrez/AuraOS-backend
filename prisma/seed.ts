@@ -100,7 +100,6 @@ async function main() {
       data: {
         memberName: 'Juan Pérez',
         tier: 'Elite',
-        cardUuid: 'A1B2C3D4-E5F6-7890-ABCD-EF1234567890',
         startDate: new Date(),
         endDate: new Date(Date.now() + oneMonthMs),
         isActive: true,
@@ -111,7 +110,6 @@ async function main() {
       data: {
         memberName: 'María García',
         tier: 'Premium',
-        cardUuid: '00000000-0000-0000-0000-000000000001',
         startDate: new Date(),
         endDate: new Date(Date.now() + 30 * 60 * 1000),
         isActive: true,
@@ -129,14 +127,6 @@ async function main() {
       },
     }),
   ]);
-
-  await prisma.vehicleEntry.update({
-    where: { id: vehicleEntries[2].id },
-    data: {
-      membershipId: memberships[0].id,
-      isVip: true,
-    },
-  });
 
   console.log('Seed completado:', {
     sucursal: branch.name,
