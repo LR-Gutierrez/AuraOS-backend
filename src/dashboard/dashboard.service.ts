@@ -90,44 +90,35 @@ export class DashboardService {
       }),
     ]);
 
-    const typeMultiplier: Record<string, number> = {
-      motorcycle: 1,
-      light: 1,
-      heavy: 3,
-    };
-
     const countByType = (entries: typeof currentEntries) => {
-      let equivalent = 0;
+      let count = 0;
       for (const e of entries) {
-        equivalent += typeMultiplier[e.vehicleType] ?? 1;
+        count++;
       }
-      return equivalent;
+      return count;
     };
 
-    const occupiedEquivalent = countByType(currentEntries);
-    const yesterdayOccupiedEquivalent = countByType(yesterdayEntries);
+    const occupiedBays = countByType(currentEntries);
+    const yesterdayOccupied = countByType(yesterdayEntries);
 
-    const totalEquivalentCapacity =
-      branch.motorcycleCapacity * 1 +
-      branch.lightVehicleCapacity * 1 +
-      branch.heavyVehicleCapacity * 3;
+    const totalBays =
+      branch.motorcycleCapacity +
+      branch.lightVehicleCapacity +
+      branch.heavyVehicleCapacity;
 
     const occupancyPercent =
-      totalEquivalentCapacity > 0
-        ? Math.round((occupiedEquivalent / totalEquivalentCapacity) * 100)
+      totalBays > 0
+        ? Math.round((occupiedBays / totalBays) * 100)
         : 0;
 
-    const totalBays = totalEquivalentCapacity;
-    const occupiedBays = occupiedEquivalent;
-
     const trendPercent =
-      yesterdayOccupiedEquivalent > 0
+      yesterdayOccupied > 0
         ? Math.round(
-            ((occupiedEquivalent - yesterdayOccupiedEquivalent) /
-              yesterdayOccupiedEquivalent) *
+            ((occupiedBays - yesterdayOccupied) /
+              yesterdayOccupied) *
               100,
           )
-        : occupiedEquivalent > 0
+        : occupiedBays > 0
           ? 100
           : 0;
 

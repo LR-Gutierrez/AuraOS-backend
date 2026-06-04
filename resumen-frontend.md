@@ -206,9 +206,9 @@ Authorization: Bearer <token>
 
 | Campo | Cálculo |
 |-------|---------|
-| `occupancyPercent` | (activos / capacidad total equivalente) × 100 |
-| `occupiedBays` | Espacios equivalentes ocupados ahora (`exitedAt = null`) |
-| `totalBays` | `motorcycleCapacity + lightVehicleCapacity + (heavyCapacity × 3)` |
+| `occupancyPercent` | (activos / capacidad total) × 100 |
+| `occupiedBays` | Espacios ocupados ahora (`exitedAt = null`) |
+| `totalBays` | `motorcycleCapacity + lightVehicleCapacity + heavyVehicleCapacity` |
 | `trendPercent` | % de cambio vs ayer a la misma hora |
 | `dailyRevenue` | Suma de tarifas planas de ingresos de hoy (sin pernocta) |
 | `activeMemberships` | Membresías activas de esta sucursal |
@@ -271,7 +271,7 @@ Cada `Branch` tiene estas tarifas configurables:
 
 | Regla | Detalle |
 |-------|---------|
-| **1 heavy = 3 light** | Ocupación se calcula en equivalentes: `heavy × 3` |
+| **Capacidad total** | Suma directa de espacios físicos: `motorcycle + light + heavy` |
 | **Ocupación** | Solo vehículos sin salir (exitedAt = null) |
 | **Fee** | `(días × tarifa_plana) + (noches × tarifa_pernocta)` |
 | **Duración** | Diferencia entre createdAt y exitedAt |
