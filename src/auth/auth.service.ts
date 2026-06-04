@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
@@ -51,6 +51,7 @@ export class AuthService {
           name: user.name,
           email: user.email,
           role: user.role,
+          avatarUrl: user.avatarUrl,
         },
       },
     };
@@ -112,6 +113,7 @@ export class AuthService {
             name: user.name,
             email: user.email,
             role: user.role,
+            avatarUrl: user.avatarUrl,
           },
         },
       };
@@ -140,6 +142,21 @@ export class AuthService {
       success: true,
       message:
         'Dispositivo móvil enrolado exitosamente para acceso biométrico.',
+    };
+  }
+
+  async uploadAvatar(userId: string, file: Express.Multer.File) {
+    const avatarUrl = `uploads/avatars/${file.filename}`;
+    const success = await this.usersService.updateAvatar(userId, avatarUrl);
+    if (!success) {
+      throw new BadRequestException({
+        success: false,
+        message: 'No se pudo actualizar el avatar.',
+      });
+    }
+    return {
+      success: true,
+      data: { avatarUrl },
     };
   }
 

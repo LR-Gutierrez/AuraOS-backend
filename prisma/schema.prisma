@@ -16,6 +16,7 @@ model User {
   name               String
   role               String   @default("operator")
   biometricPublicKey String?  @db.Text
+  avatarUrl          String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

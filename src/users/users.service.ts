@@ -32,4 +32,16 @@ export class UsersService {
   async create(data: any): Promise<User> {
     return this.prisma.user.create({ data });
   }
+
+  async updateAvatar(userId: string, avatarUrl: string): Promise<boolean> {
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { avatarUrl },
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
 }
