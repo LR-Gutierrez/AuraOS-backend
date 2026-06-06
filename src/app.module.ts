@@ -10,7 +10,7 @@ import { BranchesModule } from './branches/branches.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { AnalyticsModule } from './analytics/analytics.module';
-import { SyncModule } from './sync/sync.module';
+import { ChangeJournalModule } from './change-journal/change-journal.module';
 
 @Module({
   imports: [
@@ -23,7 +23,7 @@ import { SyncModule } from './sync/sync.module';
     DashboardModule,
     MembershipsModule,
     AnalyticsModule,
-    SyncModule,
+    ChangeJournalModule,
   ],
   controllers: [AppController],
   providers: [AppService],

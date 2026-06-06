@@ -17,6 +17,7 @@ model User {
   role               String   @default("operator")
   biometricPublicKey String?  @db.Text
   avatarUrl          String?
+  lastModifiedAt     BigInt   @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
@@ -36,6 +37,7 @@ model VehicleEntry {
   leftPhotoUrl  String?
   rightPhotoUrl String?
   exitedAt      DateTime?
+  lastModifiedAt BigInt    @default(0)
   createdAt     DateTime    @default(now())
 
   @@index([branchId])
@@ -68,11 +70,12 @@ model Branch {
   currency String @default("USD")
   favorite Boolean @default(false)
 
-  vehicleEntries VehicleEntry[]
-  memberships    Membership[]
+  lastModifiedAt   BigInt     @default(0)
+  vehicleEntries   VehicleEntry[]
+  memberships      Membership[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Membership {
@@ -86,8 +89,25 @@ model Membership {
   branchId      String
   branch        Branch         @relation(fields: [branchId], references: [id], onDelete: Cascade)
   vehicleEntries VehicleEntry[]
+  lastModifiedAt BigInt        @default(0)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
   @@index([branchId])
+}
+
+model ChangeJournal {
+  id            BigInt   @id @default(autoincrement())
+  entityType    String
+  entityId      String
+  operation     String
+  data          Json
+  changedFields Json?
+  timestamp     BigInt
+  deviceId      String
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([timestamp])
+  @@index([deviceId])
 }
