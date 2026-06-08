@@ -157,6 +157,32 @@ export class ChangeJournalService {
         });
       }
     } else {
+      if (change.entityType === 'membership' && change.data?.cardUuid) {
+        const cardConflict = await this.prisma.membership.findFirst({
+          where: { cardUuid: change.data.cardUuid as string },
+        });
+
+        if (cardConflict) {
+          const conflictTs = Number(cardConflict.lastModifiedAt ?? 0);
+          if (change.timestamp > conflictTs) {
+            await this.prisma.membership.update({
+              where: { id: cardConflict.id },
+              data: {
+                ...this.mapDataToModel(
+                  change.entityType,
+                  change.data,
+                  change.timestamp,
+                ),
+                cardUuid: change.data.cardUuid as string,
+              },
+            });
+          }
+
+          await this.insertJournalEntry(change);
+          return null;
+        }
+      }
+
       await model.create({
         data: this.mapDataToModel(
           change.entityType,

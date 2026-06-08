@@ -21,6 +21,7 @@ import { randomUUID } from 'crypto';
 import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { VehicleEntriesService } from './vehicle-entries.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { MulterErrorFilter } from './multer-error.filter';
 import { ExitVehicleDto } from './dto/exit-vehicle.dto';
 import { NfcEntryDto } from './dto/nfc-entry.dto';
@@ -33,7 +34,10 @@ if (!existsSync(uploadBaseDir)) {
 @Controller('api/v1')
 @UseFilters(MulterErrorFilter)
 export class VehicleEntriesController {
-  constructor(private readonly vehicleEntriesService: VehicleEntriesService) {}
+  constructor(
+    private readonly vehicleEntriesService: VehicleEntriesService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   @Post('vehicle-entries')
   @HttpCode(HttpStatus.OK)
@@ -114,7 +118,7 @@ export class VehicleEntriesController {
 
     const vip = isVip === 'true' || isVip === '1';
 
-    return this.vehicleEntriesService.createEntry({
+    const result = await this.vehicleEntriesService.createEntry({
       id: entryId,
       plate,
       vehicleType,
@@ -127,6 +131,20 @@ export class VehicleEntriesController {
       leftPhotoUrl,
       rightPhotoUrl,
     });
+
+    this.notificationsService.emitJournalNotification({
+      changes: [
+        {
+          entityType: 'vehicle_entry',
+          operation: 'CREATE',
+          data: { plate, branchId },
+        },
+      ],
+      branchIds: [branchId],
+      hints: ['vehicle_entry'],
+    });
+
+    return result;
   }
 
   @Post('vehicle-entries/nfc-entry')
@@ -138,7 +156,28 @@ export class VehicleEntriesController {
   @Patch('vehicle-entries/:id/exit')
   @HttpCode(HttpStatus.OK)
   async exit(@Param('id') id: string, @Body() dto: ExitVehicleDto) {
-    return this.vehicleEntriesService.exitVehicle(id, dto.exitedAt);
+    const result = await this.vehicleEntriesService.exitVehicle(
+      id,
+      dto.exitedAt,
+    );
+
+    const entry = (result as any)?.data as
+      | { plate?: string; branchId?: string }
+      | undefined;
+
+    this.notificationsService.emitJournalNotification({
+      changes: [
+        {
+          entityType: 'vehicle_entry',
+          operation: 'DELETE',
+          data: { plate: entry?.plate ?? id, branchId: entry?.branchId },
+        },
+      ],
+      branchIds: entry?.branchId ? [entry.branchId] : [],
+      hints: ['vehicle_entry'],
+    });
+
+    return result;
   }
 
   @Get('vehicle-entries')

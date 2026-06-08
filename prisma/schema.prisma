@@ -96,6 +96,15 @@ model Membership {
   @@index([branchId])
 }
 
+model FcmToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 model ChangeJournal {
   id            BigInt   @id @default(autoincrement())
   entityType    String

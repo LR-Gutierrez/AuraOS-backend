@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ChangeJournalService } from './change-journal.service';
-import { SyncEventsService } from '../sync-events/sync-events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import type {
   PushChangesResponse,
   PullChangesResponse,
@@ -12,7 +12,7 @@ import type {
 export class ChangeJournalController {
   constructor(
     private readonly service: ChangeJournalService,
-    private readonly syncEventsService: SyncEventsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -22,29 +22,24 @@ export class ChangeJournalController {
   ): Promise<PushChangesResponse> {
     const result = await this.service.pushChanges(changes);
 
-    const affectedBranches = new Set<string>();
-    const entityHints = new Set<string>();
+    const branchIds = new Set<string>();
+    const hints = new Set<string>();
 
     for (const change of changes) {
-      entityHints.add(change.entityType);
+      hints.add(change.entityType);
       if (change.entityType === 'branch') {
-        affectedBranches.add(change.entityId);
+        branchIds.add(change.entityId);
       } else if (change.data?.branchId) {
-        affectedBranches.add(change.data.branchId as string);
+        branchIds.add(change.data.branchId as string);
       }
     }
 
-    if (affectedBranches.size > 0) {
-      const latestCursor = String(Date.now());
-      for (const branchId of affectedBranches) {
-        this.syncEventsService.publish({
-          type: 'journal_updated',
-          scopeType: 'branch',
-          scopeId: branchId,
-          latestCursor,
-          hints: [...entityHints],
-        });
-      }
+    if (branchIds.size > 0) {
+      void this.notificationsService.emitJournalNotification({
+        changes,
+        branchIds: [...branchIds],
+        hints: [...hints],
+      });
     }
 
     return result;

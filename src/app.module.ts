@@ -12,6 +12,7 @@ import { MembershipsModule } from './memberships/memberships.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ChangeJournalModule } from './change-journal/change-journal.module';
 import { SyncEventsModule } from './sync-events/sync-events.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SyncEventsModule } from './sync-events/sync-events.module';
     AnalyticsModule,
     ChangeJournalModule,
     SyncEventsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
