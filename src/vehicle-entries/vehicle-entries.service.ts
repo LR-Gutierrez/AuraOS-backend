@@ -162,7 +162,9 @@ export class VehicleEntriesService {
       });
 
       if (!membership) {
-        throw new NotFoundException(`Membership with ID ${data.membershipId} not found`);
+        throw new NotFoundException(
+          `Membership with ID ${data.membershipId} not found`,
+        );
       }
 
       if (!membership.isActive || membership.endDate <= new Date()) {
@@ -170,7 +172,9 @@ export class VehicleEntriesService {
       }
 
       if (membership.branchId !== data.branchId) {
-        throw new BadRequestException('La membresía no pertenece a esta sucursal');
+        throw new BadRequestException(
+          'La membresía no pertenece a esta sucursal',
+        );
       }
 
       const activeEntry = await this.prisma.vehicleEntry.findFirst({
@@ -178,7 +182,9 @@ export class VehicleEntriesService {
       });
 
       if (activeEntry) {
-        throw new BadRequestException('El socio ya tiene un vehículo activo en el estacionamiento');
+        throw new BadRequestException(
+          'El socio ya tiene un vehículo activo en el estacionamiento',
+        );
       }
     }
 
@@ -217,7 +223,9 @@ export class VehicleEntriesService {
     });
 
     if (!membership) {
-      throw new NotFoundException(`No se encontró una membresía con la tarjeta ${cardUuid}`);
+      throw new NotFoundException(
+        `No se encontró una membresía con la tarjeta ${cardUuid}`,
+      );
     }
 
     if (!membership.isActive || membership.endDate <= new Date()) {
@@ -229,7 +237,9 @@ export class VehicleEntriesService {
     });
 
     if (activeEntry) {
-      throw new BadRequestException('El socio ya tiene un vehículo activo en el estacionamiento');
+      throw new BadRequestException(
+        'El socio ya tiene un vehículo activo en el estacionamiento',
+      );
     }
 
     const entry = await this.prisma.vehicleEntry.create({

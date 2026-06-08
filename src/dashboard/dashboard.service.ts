@@ -107,16 +107,12 @@ export class DashboardService {
       branch.heavyVehicleCapacity;
 
     const occupancyPercent =
-      totalBays > 0
-        ? Math.round((occupiedBays / totalBays) * 100)
-        : 0;
+      totalBays > 0 ? Math.round((occupiedBays / totalBays) * 100) : 0;
 
     const trendPercent =
       yesterdayOccupied > 0
         ? Math.round(
-            ((occupiedBays - yesterdayOccupied) /
-              yesterdayOccupied) *
-              100,
+            ((occupiedBays - yesterdayOccupied) / yesterdayOccupied) * 100,
           )
         : occupiedBays > 0
           ? 100

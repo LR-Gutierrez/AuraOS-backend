@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CreateMembershipDto } from './dto/create-membership.dto';
@@ -60,7 +65,9 @@ export class MembershipsService {
       where: { cardUuid },
     });
     if (!membership) {
-      throw new NotFoundException(`No se encontró una membresía con la tarjeta ${cardUuid}`);
+      throw new NotFoundException(
+        `No se encontró una membresía con la tarjeta ${cardUuid}`,
+      );
     }
     return this.format(membership);
   }
@@ -77,7 +84,9 @@ export class MembershipsService {
       where: { cardUuid },
     });
     if (existing) {
-      throw new ConflictException(`La tarjeta ${cardUuid} ya está asignada a otro socio`);
+      throw new ConflictException(
+        `La tarjeta ${cardUuid} ya está asignada a otro socio`,
+      );
     }
 
     const updated = await this.prisma.membership.update({

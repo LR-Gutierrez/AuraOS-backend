@@ -10,24 +10,59 @@ import type {
 
 const ENTITY_FIELDS: Record<string, string[]> = {
   branch: [
-    'id', 'name', 'address',
-    'motorcycleCapacity', 'lightVehicleCapacity', 'heavyVehicleCapacity',
-    'motorcycleRate', 'lightVehicleRate', 'heavyVehicleRate',
-    'motorcycleOvernightRate', 'lightVehicleOvernightRate', 'heavyVehicleOvernightRate',
-    'openTimeWeekday', 'closeTimeWeekday', 'openTimeWeekend', 'closeTimeWeekend',
-    'currency', 'favorite',
+    'id',
+    'name',
+    'address',
+    'motorcycleCapacity',
+    'lightVehicleCapacity',
+    'heavyVehicleCapacity',
+    'motorcycleRate',
+    'lightVehicleRate',
+    'heavyVehicleRate',
+    'motorcycleOvernightRate',
+    'lightVehicleOvernightRate',
+    'heavyVehicleOvernightRate',
+    'openTimeWeekday',
+    'closeTimeWeekday',
+    'openTimeWeekend',
+    'closeTimeWeekend',
+    'currency',
+    'favorite',
   ],
   membership: [
-    'id', 'memberName', 'tier', 'cardUuid', 'startDate', 'endDate', 'isActive', 'branchId',
+    'id',
+    'memberName',
+    'tier',
+    'cardUuid',
+    'startDate',
+    'endDate',
+    'isActive',
+    'branchId',
   ],
   vehicle_entry: [
-    'id', 'plate', 'vehicleType', 'isVip', 'membershipId', 'branchId',
-    'platePhotoUrl', 'frontPhotoUrl', 'rearPhotoUrl', 'leftPhotoUrl', 'rightPhotoUrl',
-    'exitedAt', 'createdAt',
+    'id',
+    'plate',
+    'vehicleType',
+    'isVip',
+    'membershipId',
+    'branchId',
+    'platePhotoUrl',
+    'frontPhotoUrl',
+    'rearPhotoUrl',
+    'leftPhotoUrl',
+    'rightPhotoUrl',
+    'exitedAt',
+    'createdAt',
   ],
 };
 
-const DATE_FIELDS = ['startDate', 'endDate', 'exitedAt', 'createdAt', 'updatedAt'];
+const DATE_FIELDS = [
+  'startDate',
+  'endDate',
+  'exitedAt',
+  'createdAt',
+  'updatedAt',
+];
 
 @Injectable()
 export class ChangeJournalService {
@@ -89,9 +124,7 @@ export class ChangeJournalService {
     return existing !== null;
   }
 
-  private async applyChange(
-    change: ChangePayload,
-  ): Promise<Conflict | null> {
+  private async applyChange(change: ChangePayload): Promise<Conflict | null> {
     switch (change.operation) {
       case 'CREATE':
         return this.handleCreate(change);
@@ -116,12 +149,20 @@ export class ChangeJournalService {
       if (change.timestamp > existingTs) {
         await model.update({
           where: { id: change.entityId },
-          data: this.mapDataToModel(change.entityType, change.data, change.timestamp),
+          data: this.mapDataToModel(
+            change.entityType,
+            change.data,
+            change.timestamp,
+          ),
         });
       }
     } else {
       await model.create({
-        data: this.mapDataToModel(change.entityType, change.data, change.timestamp),
+        data: this.mapDataToModel(
+          change.entityType,
+          change.data,
+          change.timestamp,
+        ),
       });
     }
 
@@ -132,13 +173,17 @@ export class ChangeJournalService {
   private async handleUpdate(change: ChangePayload): Promise<Conflict | null> {
     const model = this.getModel(change.entityType);
 
-    let entity = await model.findUnique({
+    const entity = await model.findUnique({
       where: { id: change.entityId },
     });
 
     if (!entity) {
       await model.create({
-        data: this.mapDataToModel(change.entityType, change.data, change.timestamp),
+        data: this.mapDataToModel(
+          change.entityType,
+          change.data,
+          change.timestamp,
+        ),
       });
       await this.insertJournalEntry(change);
       return null;
@@ -155,15 +200,15 @@ export class ChangeJournalService {
     });
 
     if (conflictChange) {
-      const mergedData = this.fieldLevelMerge(
-        entity,
-        change,
-        conflictChange,
-      );
+      const mergedData = this.fieldLevelMerge(entity, change, conflictChange);
 
       await model.update({
         where: { id: change.entityId },
-        data: this.mapDataToModel(change.entityType, mergedData, change.timestamp),
+        data: this.mapDataToModel(
+          change.entityType,
+          mergedData,
+          change.timestamp,
+        ),
       });
 
       const resolvedFields: Record<string, unknown> = {};
@@ -188,7 +233,11 @@ export class ChangeJournalService {
 
     await model.update({
       where: { id: change.entityId },
-      data: this.mapDataToModel(change.entityType, change.data, change.timestamp),
+      data: this.mapDataToModel(
+        change.entityType,
+        change.data,
+        change.timestamp,
+      ),
     });
     await this.insertJournalEntry(change);
     return null;
@@ -216,7 +265,10 @@ export class ChangeJournalService {
   ): Record<string, unknown> {
     const merged: Record<string, unknown> = { ...entity };
     const conflictData = conflictChange.data as Record<string, unknown>;
-    const conflictChangedFields = conflictChange.changedFields as Record<string, unknown> | null;
+    const conflictChangedFields = conflictChange.changedFields as Record<
+      string,
+      unknown
+    > | null;
     const incomingChangedFields = incoming.changedFields ?? {};
     const conflictTs = Number(conflictChange.timestamp);
 
@@ -278,8 +330,9 @@ export class ChangeJournalService {
         entityId: change.entityId,
         operation: change.operation,
         data: change.data as Prisma.InputJsonValue,
-        changedFields: (change.changedFields ??
-          undefined) as Prisma.InputJsonValue | undefined,
+        changedFields: (change.changedFields ?? undefined) as
+          | Prisma.InputJsonValue
+          | undefined,
         timestamp: change.timestamp,
         deviceId: change.deviceId,
       },

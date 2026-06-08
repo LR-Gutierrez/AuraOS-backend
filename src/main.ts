@@ -1,4 +1,4 @@
-;(BigInt.prototype as any).toJSON = function () {
+(BigInt.prototype as any).toJSON = function () {
   return Number(this);
 };
 
