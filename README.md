@@ -48,3 +48,7 @@ Crea un usuario `luisangelrgr@gmail.com` / `123456` y una sucursal predeterminad
 | Auth | JWT (passport) + bcrypt |
 | Validación | class-validator |
 | Archivos | Multer (disk storage) |
+
+## License
+
+MIT — see [LICENSE](LICENSE).
